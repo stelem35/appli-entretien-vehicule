@@ -1,6 +1,7 @@
 import { initVehicules } from './vehicules.js';
 import { initEntretiens, refreshVehiculeSelects } from './entretiens.js';
 import { initExport, refreshVehiculeFilter, onDataChanged } from './export.js';
+import { initBackup } from './backup.js';
 
 const VIEW_TITLES = {
   vehicules: 'Véhicules',
@@ -55,6 +56,7 @@ async function main() {
   });
   await initEntretiens(() => onDataChanged());
   await initExport();
+  initBackup();
 }
 
 main();

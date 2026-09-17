@@ -65,6 +65,11 @@ export async function remove(storeName, id) {
   return wrapRequest(store.delete(id));
 }
 
+export async function clear(storeName) {
+  const store = await tx(storeName, 'readwrite');
+  return wrapRequest(store.clear());
+}
+
 // --- Blobs (photos) ---
 
 export async function saveBlob(id, blob) {

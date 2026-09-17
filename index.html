@@ -81,6 +81,16 @@
   <div class="export-actions">
     <button type="button" id="btn-generate-pdf" class="btn btn-primary">Générer le PDF</button>
   </div>
+
+  <div class="backup-section">
+    <h2>Sauvegarde des données</h2>
+    <p class="backup-hint">Toutes les données sont stockées uniquement sur cet appareil. Exportez régulièrement une sauvegarde pour ne rien perdre en cas de changement de téléphone ou de suppression de l'app.</p>
+    <div class="backup-actions">
+      <button type="button" id="btn-export-backup" class="btn btn-ghost">Exporter mes données</button>
+      <button type="button" id="btn-import-backup" class="btn btn-ghost">Restaurer une sauvegarde</button>
+    </div>
+    <input type="file" id="backup-import-input" accept="application/json,.json" hidden>
+  </div>
 </main>
 
 <nav class="bottom-nav">

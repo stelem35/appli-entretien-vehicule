@@ -302,6 +302,27 @@ input:focus, select:focus { outline: 2px solid var(--primary); }
 }
 .export-actions .btn { width: 100%; }
 
+.backup-section {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.backup-section h2 {
+  font-size: 1rem;
+  margin: 0 0 6px;
+}
+.backup-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0 0 12px;
+}
+.backup-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.backup-actions .btn { flex: 1 1 150px; }
+
 .photo-full-wrap {
   padding: 12px;
   display: flex;
