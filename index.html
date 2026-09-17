@@ -58,15 +58,13 @@
       <label for="export-texte">Recherche (résumé / garage)</label>
       <input type="text" id="export-texte" placeholder="ex : bougies, Garage Dupont">
     </div>
-    <div class="field-row">
-      <div class="field">
-        <label for="export-date-debut">Du</label>
-        <input type="date" id="export-date-debut">
-      </div>
-      <div class="field">
-        <label for="export-date-fin">Au</label>
-        <input type="date" id="export-date-fin">
-      </div>
+    <div class="field">
+      <label for="export-date-debut">Du</label>
+      <input type="date" id="export-date-debut">
+    </div>
+    <div class="field">
+      <label for="export-date-fin">Au</label>
+      <input type="date" id="export-date-fin">
     </div>
   </form>
 
@@ -140,15 +138,13 @@
       <input type="text" id="vehicule-finition" placeholder="ex : Connect Edition">
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label for="vehicule-date-circulation">Mise en circulation</label>
-        <input type="date" id="vehicule-date-circulation">
-      </div>
-      <div class="field">
-        <label for="vehicule-immatriculation">Immatriculation</label>
-        <input type="text" id="vehicule-immatriculation" placeholder="ex : AA-123-AA">
-      </div>
+    <div class="field">
+      <label for="vehicule-date-circulation">Mise en circulation</label>
+      <input type="date" id="vehicule-date-circulation">
+    </div>
+    <div class="field">
+      <label for="vehicule-immatriculation">Immatriculation</label>
+      <input type="text" id="vehicule-immatriculation" placeholder="ex : AA-123-AA">
     </div>
 
     <div class="field">
@@ -179,15 +175,9 @@
       <select id="entretien-vehicule" required></select>
     </div>
 
-    <div class="field-row">
-      <div class="field">
-        <label for="entretien-date">Date de l'entretien</label>
-        <input type="date" id="entretien-date" required>
-      </div>
-      <div class="field">
-        <label for="entretien-km">Kilométrage</label>
-        <input type="number" id="entretien-km" min="0" step="1" required>
-      </div>
+    <div class="field">
+      <label for="entretien-date">Date de l'entretien</label>
+      <input type="date" id="entretien-date" required>
     </div>
 
     <div class="field">
@@ -222,9 +212,14 @@
         <input type="number" id="entretien-prix" min="0" step="0.01" required>
       </div>
       <div class="field">
-        <label for="entretien-garage">Nom du garage</label>
-        <input type="text" id="entretien-garage">
+        <label for="entretien-km">Kilométrage</label>
+        <input type="number" id="entretien-km" min="0" step="1" required>
       </div>
+    </div>
+
+    <div class="field">
+      <label for="entretien-garage">Nom du garage</label>
+      <input type="text" id="entretien-garage">
     </div>
 
     <div class="field">
