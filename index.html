@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suivi Entretien Véhicule</title>
+<meta name="description" content="Suivi hors-ligne de l'entretien de vos véhicules">
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Entretien">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1 id="app-title">Véhicules</h1>
+</header>
+
+<main id="view-vehicules" class="view">
+  <section id="vehicules-list" class="list"></section>
+  <p id="vehicules-empty" class="empty-state" hidden>Aucun véhicule enregistré. Ajoutez-en un avec le bouton "+".</p>
+</main>
+
+<main id="view-entretiens" class="view" hidden>
+  <div class="toolbar">
+    <select id="entretien-vehicule-filter" aria-label="Véhicule"></select>
+    <select id="entretien-sort" aria-label="Trier par">
+      <option value="date-desc">Date (récent)</option>
+      <option value="date-asc">Date (ancien)</option>
+      <option value="km-desc">Kilométrage (haut)</option>
+      <option value="km-asc">Kilométrage (bas)</option>
+      <option value="prix-desc">Prix (haut)</option>
+      <option value="prix-asc">Prix (bas)</option>
+    </select>
+  </div>
+  <section id="entretiens-list" class="list"></section>
+  <p id="entretiens-empty" class="empty-state" hidden>Aucun entretien pour l'instant.</p>
+</main>
+
+<main id="view-export" class="view" hidden>
+  <form id="export-filters" class="filters">
+    <div class="field">
+      <label for="export-vehicule">Véhicule</label>
+      <select id="export-vehicule"></select>
+    </div>
+    <div class="field">
+      <label for="export-type">Type d'entretien</label>
+      <select id="export-type">
+        <option value="">Tous les types</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="export-texte">Recherche (résumé / garage)</label>
+      <input type="text" id="export-texte" placeholder="ex : bougies, Garage Dupont">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="export-date-debut">Du</label>
+        <input type="date" id="export-date-debut">
+      </div>
+      <div class="field">
+        <label for="export-date-fin">Au</label>
+        <input type="date" id="export-date-fin">
+      </div>
+    </div>
+  </form>
+
+  <div class="export-summary">
+    <span id="export-count">0 entretien(s)</span>
+    <span id="export-total">0,00 €</span>
+  </div>
+
+  <section id="export-list" class="list"></section>
+  <p id="export-empty" class="empty-state" hidden>Aucun entretien ne correspond à ces filtres.</p>
+
+  <div class="export-actions">
+    <button type="button" id="btn-generate-pdf" class="btn btn-primary">Générer le PDF</button>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <button type="button" class="nav-btn active" data-view="vehicules">
+    <span class="nav-icon">🚗</span><span>Véhicules</span>
+  </button>
+  <button type="button" class="nav-btn" data-view="entretiens">
+    <span class="nav-icon">🔧</span><span>Entretiens</span>
+  </button>
+  <button type="button" class="nav-btn" data-view="export">
+    <span class="nav-icon">📄</span><span>Export</span>
+  </button>
+</nav>
+
+<button type="button" id="fab" class="fab" aria-label="Ajouter">+</button>
+
+<!-- Dialogue véhicule -->
+<dialog id="dialog-vehicule">
+  <form method="dialog" id="form-vehicule" class="dialog-form">
+    <h2 id="dialog-vehicule-title">Nouveau véhicule</h2>
+    <input type="hidden" id="vehicule-id">
+
+    <div class="field">
+      <label for="vehicule-type">Type de véhicule</label>
+      <select id="vehicule-type" required>
+        <option value="voiture">Voiture</option>
+        <option value="camion">Camion</option>
+        <option value="moto">Moto</option>
+        <option value="utilitaire">Utilitaire</option>
+        <option value="autre">Autre</option>
+      </select>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="vehicule-marque">Marque</label>
+        <input type="text" id="vehicule-marque" required>
+      </div>
+      <div class="field">
+        <label for="vehicule-modele">Modèle</label>
+        <input type="text" id="vehicule-modele" required>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="vehicule-finition">Finition</label>
+      <input type="text" id="vehicule-finition" placeholder="ex : Connect Edition">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="vehicule-date-circulation">Mise en circulation</label>
+        <input type="date" id="vehicule-date-circulation">
+      </div>
+      <div class="field">
+        <label for="vehicule-immatriculation">Immatriculation</label>
+        <input type="text" id="vehicule-immatriculation" placeholder="ex : AA-123-AA">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Photo du véhicule</label>
+      <div class="photo-picker">
+        <img id="vehicule-photo-preview" class="photo-preview" hidden>
+        <input type="file" id="vehicule-photo" accept="image/*" capture="environment">
+      </div>
+    </div>
+
+    <p class="form-error" id="vehicule-form-error" hidden></p>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close-dialog="dialog-vehicule">Annuler</button>
+      <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Dialogue entretien -->
+<dialog id="dialog-entretien">
+  <form method="dialog" id="form-entretien" class="dialog-form">
+    <h2 id="dialog-entretien-title">Nouvel entretien</h2>
+    <input type="hidden" id="entretien-id">
+
+    <div class="field">
+      <label for="entretien-vehicule">Véhicule concerné</label>
+      <select id="entretien-vehicule" required></select>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="entretien-date">Date de l'entretien</label>
+        <input type="date" id="entretien-date" required>
+      </div>
+      <div class="field">
+        <label for="entretien-km">Kilométrage</label>
+        <input type="number" id="entretien-km" min="0" step="1" required>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="entretien-type">Type d'entretien</label>
+      <select id="entretien-type" required>
+        <option value="Vidange">Vidange</option>
+        <option value="Révision">Révision</option>
+        <option value="Freins">Freins</option>
+        <option value="Pneus">Pneus</option>
+        <option value="Distribution/courroie">Distribution / courroie</option>
+        <option value="Filtres">Filtres</option>
+        <option value="Contrôle technique">Contrôle technique</option>
+        <option value="Batterie">Batterie</option>
+        <option value="Climatisation">Climatisation</option>
+        <option value="Amortisseurs">Amortisseurs</option>
+        <option value="Autre">Autre…</option>
+      </select>
+    </div>
+    <div class="field" id="entretien-type-autre-field" hidden>
+      <label for="entretien-type-autre">Préciser le type</label>
+      <input type="text" id="entretien-type-autre">
+    </div>
+
+    <div class="field">
+      <label for="entretien-resume">Résumé court</label>
+      <input type="text" id="entretien-resume" placeholder="ex : bougies préchauffage" required>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="entretien-prix">Prix (€)</label>
+        <input type="number" id="entretien-prix" min="0" step="0.01" required>
+      </div>
+      <div class="field">
+        <label for="entretien-garage">Nom du garage</label>
+        <input type="text" id="entretien-garage">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Photo de la facture</label>
+      <div class="photo-picker">
+        <img id="entretien-photo-preview" class="photo-preview" hidden>
+        <input type="file" id="entretien-photo" accept="image/*" capture="environment">
+      </div>
+    </div>
+
+    <p class="form-error" id="entretien-form-error" hidden></p>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close-dialog="dialog-entretien">Annuler</button>
+      <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Dialogue photo plein écran -->
+<dialog id="dialog-photo">
+  <div class="photo-full-wrap">
+    <button type="button" class="btn btn-ghost" data-close-dialog="dialog-photo">Fermer</button>
+    <img id="photo-full" alt="Photo">
+  </div>
+</dialog>
+
+<!-- Dialogue de confirmation générique -->
+<dialog id="dialog-confirm">
+  <div class="dialog-form">
+    <h2 id="confirm-title">Confirmer</h2>
+    <p id="confirm-message"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close-dialog="dialog-confirm">Annuler</button>
+      <button type="button" id="confirm-ok" class="btn btn-danger">Supprimer</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js" defer></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
