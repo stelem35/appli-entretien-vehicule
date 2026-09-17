@@ -116,11 +116,14 @@ async function generatePdf() {
   const multiVehicule = !vehiculeSelect.value;
   const vehiculeTitre = multiVehicule ? 'Tous les véhicules' : vehiculeLabel(getVehiculeById(vehiculeSelect.value));
 
-  doc.setFontSize(14);
-  doc.text('Historique d\'entretien', 14, 16);
-  doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.text(vehiculeTitre, 14, 23);
+  const drawHeader = () => {
+    doc.setFontSize(14);
+    doc.setTextColor(0);
+    doc.text('Historique d\'entretien', 14, 16);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(vehiculeTitre, 14, 23);
+  };
 
   const head = multiVehicule
     ? [['Véhicule', 'Date', 'Km', 'Type', 'Résumé', 'Prix', 'Garage']]
@@ -145,13 +148,14 @@ async function generatePdf() {
   doc.autoTable({
     head,
     body,
-    startY: 28,
+    margin: { top: 26 },
     styles: { fontSize: 9 },
     headStyles: { fillColor: [15, 23, 42] },
     foot: [multiVehicule
       ? ['', '', '', '', 'Total', formatCurrency(total), '']
       : ['', '', '', 'Total', formatCurrency(total), '']],
     footStyles: { fillColor: [226, 232, 240], textColor: 20 },
+    didDrawPage: drawHeader,
   });
 
   const fileName = `entretiens_${new Date().toISOString().slice(0, 10)}.pdf`;
