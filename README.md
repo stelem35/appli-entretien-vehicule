@@ -8,6 +8,8 @@ Cahier des charges complet : [cdc-app-suivi-entretien-vehicule.md](cdc-app-suivi
 
 - Gestion des véhicules (CRUD + photo)
 - Gestion des entretiens (CRUD, historique triable, photo de facture)
+- Bilan : coût total, coût au km, dépenses par année et par type (filtrables par véhicule et année)
+- Sauvegarde / restauration JSON de toutes les données
 - Export PDF filtré (type, texte, dates) avec partage natif (`navigator.share`) ou téléchargement
 - Installable en PWA (manifest + service worker, fonctionne hors-ligne après le premier chargement)
 

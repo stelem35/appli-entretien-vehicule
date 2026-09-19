@@ -1,11 +1,13 @@
 import { initVehicules } from './vehicules.js';
 import { initEntretiens, refreshVehiculeSelects } from './entretiens.js';
 import { initExport, refreshVehiculeFilter, onDataChanged } from './export.js';
+import { initDashboard, refreshDashboard } from './dashboard.js';
 import { initBackup } from './backup.js';
 
 const VIEW_TITLES = {
   vehicules: 'Véhicules',
   entretiens: 'Entretiens',
+  dashboard: 'Bilan',
   export: 'Export',
 };
 
@@ -17,7 +19,7 @@ function switchView(view) {
     btn.classList.toggle('active', btn.dataset.view === view);
   });
   document.getElementById('app-title').textContent = VIEW_TITLES[view];
-  document.getElementById('fab').hidden = view === 'export';
+  document.getElementById('fab').hidden = view === 'export' || view === 'dashboard';
 }
 
 function initNav() {
@@ -53,9 +55,14 @@ async function main() {
     refreshVehiculeSelects();
     refreshVehiculeFilter();
     onDataChanged();
+    refreshDashboard();
   });
-  await initEntretiens(() => onDataChanged());
+  await initEntretiens(() => {
+    onDataChanged();
+    refreshDashboard();
+  });
   await initExport();
+  initDashboard();
   initBackup();
 }
 

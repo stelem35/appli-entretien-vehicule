@@ -42,6 +42,33 @@
   <p id="entretiens-empty" class="empty-state" hidden>Aucun entretien pour l'instant.</p>
 </main>
 
+<main id="view-dashboard" class="view" hidden>
+  <div class="toolbar">
+    <select id="dashboard-vehicule" aria-label="Véhicule"></select>
+    <select id="dashboard-year" aria-label="Année"></select>
+  </div>
+
+  <section class="kpi-grid">
+    <div class="kpi"><span class="kpi-label">Coût total</span><span class="kpi-value" id="kpi-total">0 €</span></div>
+    <div class="kpi"><span class="kpi-label">Entretiens</span><span class="kpi-value" id="kpi-count">0</span></div>
+    <div class="kpi"><span class="kpi-label">Coût au km</span><span class="kpi-value" id="kpi-perkm">—</span></div>
+    <div class="kpi"><span class="kpi-label">Km suivis</span><span class="kpi-value" id="kpi-km">—</span></div>
+  </section>
+  <p class="chart-note">Coût au km = dépenses ÷ km entre le premier et le dernier entretien (estimation, nécessite au moins deux entretiens à des kilométrages différents).</p>
+
+  <section class="chart-card">
+    <h2>Dépenses par année</h2>
+    <div id="chart-years" class="bars-v"></div>
+    <p id="chart-years-empty" class="empty-state" hidden>Aucune donnée.</p>
+  </section>
+
+  <section class="chart-card">
+    <h2>Dépenses par type</h2>
+    <div id="chart-types" class="bars-h"></div>
+    <p id="chart-types-empty" class="empty-state" hidden>Aucune donnée.</p>
+  </section>
+</main>
+
 <main id="view-export" class="view" hidden>
   <form id="export-filters" class="filters">
     <div class="field">
@@ -97,6 +124,9 @@
   </button>
   <button type="button" class="nav-btn" data-view="entretiens">
     <span class="nav-icon">🔧</span><span>Entretiens</span>
+  </button>
+  <button type="button" class="nav-btn" data-view="dashboard">
+    <span class="nav-icon">📊</span><span>Bilan</span>
   </button>
   <button type="button" class="nav-btn" data-view="export">
     <span class="nav-icon">📄</span><span>Export</span>
