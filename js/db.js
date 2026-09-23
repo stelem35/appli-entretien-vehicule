@@ -1,7 +1,7 @@
 // Petite couche d'accès IndexedDB (pas de dépendance externe).
 
 const DB_NAME = 'entretien-vehicule-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise = null;
 
@@ -20,6 +20,10 @@ function openDB() {
       }
       if (!db.objectStoreNames.contains('blobs')) {
         db.createObjectStore('blobs', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('rappels')) {
+        const store = db.createObjectStore('rappels', { keyPath: 'id' });
+        store.createIndex('vehiculeId', 'vehiculeId', { unique: false });
       }
     };
     req.onsuccess = () => resolve(req.result);

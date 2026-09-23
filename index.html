@@ -21,6 +21,8 @@
   <h1 id="app-title">Véhicules</h1>
 </header>
 
+<div id="rappels-banner" class="rappels-banner" hidden></div>
+
 <main id="view-vehicules" class="view">
   <section id="vehicules-list" class="list"></section>
   <p id="vehicules-empty" class="empty-state" hidden>Aucun véhicule enregistré. Ajoutez-en un avec le bouton "+".</p>
@@ -40,6 +42,11 @@
   </div>
   <section id="entretiens-list" class="list"></section>
   <p id="entretiens-empty" class="empty-state" hidden>Aucun entretien pour l'instant.</p>
+</main>
+
+<main id="view-rappels" class="view" hidden>
+  <section id="rappels-list" class="list"></section>
+  <p id="rappels-empty" class="empty-state" hidden>Aucun rappel programmé. Ajoutez-en un avec le bouton "+".</p>
 </main>
 
 <main id="view-dashboard" class="view" hidden>
@@ -124,6 +131,9 @@
   </button>
   <button type="button" class="nav-btn" data-view="entretiens">
     <span class="nav-icon">🔧</span><span>Entretiens</span>
+  </button>
+  <button type="button" class="nav-btn" data-view="rappels">
+    <span class="nav-icon">🔔</span><span>Rappels</span>
   </button>
   <button type="button" class="nav-btn" data-view="dashboard">
     <span class="nav-icon">📊</span><span>Bilan</span>
@@ -264,6 +274,64 @@
 
     <div class="dialog-actions">
       <button type="button" class="btn btn-ghost" data-close-dialog="dialog-entretien">Annuler</button>
+      <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Dialogue rappel -->
+<dialog id="dialog-rappel">
+  <form method="dialog" id="form-rappel" class="dialog-form">
+    <h2 id="dialog-rappel-title">Nouveau rappel</h2>
+    <input type="hidden" id="rappel-id">
+
+    <div class="field">
+      <label for="rappel-vehicule">Véhicule concerné</label>
+      <select id="rappel-vehicule" required></select>
+    </div>
+
+    <div class="field">
+      <label for="rappel-type">Type d'entretien</label>
+      <select id="rappel-type" required>
+        <option value="Vidange">Vidange</option>
+        <option value="Révision">Révision</option>
+        <option value="Freins">Freins</option>
+        <option value="Pneus">Pneus</option>
+        <option value="Distribution/courroie">Distribution / courroie</option>
+        <option value="Filtres">Filtres</option>
+        <option value="Contrôle technique">Contrôle technique</option>
+        <option value="Batterie">Batterie</option>
+        <option value="Climatisation">Climatisation</option>
+        <option value="Amortisseurs">Amortisseurs</option>
+        <option value="Autre">Autre…</option>
+      </select>
+    </div>
+    <div class="field" id="rappel-type-autre-field" hidden>
+      <label for="rappel-type-autre">Préciser le type</label>
+      <input type="text" id="rappel-type-autre">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="rappel-date">Échéance (date)</label>
+        <input type="date" id="rappel-date">
+      </div>
+      <div class="field">
+        <label for="rappel-km">Échéance (km)</label>
+        <input type="number" id="rappel-km" min="0" step="1">
+      </div>
+    </div>
+    <p class="field-hint">Renseignez une date et/ou un kilométrage cible. Le kilométrage actuel est estimé d'après votre dernier entretien enregistré.</p>
+
+    <div class="field">
+      <label for="rappel-note">Note</label>
+      <input type="text" id="rappel-note" placeholder="ex : à faire chez Garage Dupont">
+    </div>
+
+    <p class="form-error" id="rappel-form-error" hidden></p>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close-dialog="dialog-rappel">Annuler</button>
       <button type="submit" class="btn btn-primary">Enregistrer</button>
     </div>
   </form>

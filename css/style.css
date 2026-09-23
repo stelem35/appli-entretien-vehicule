@@ -10,6 +10,8 @@
   --danger: #f87171;
   --danger-dark: #dc2626;
   --success: #4ade80;
+  --warning: #fbbf24;
+  --warning-dark: #92400e;
   --radius: 14px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
@@ -44,6 +46,23 @@ body {
   margin: 0;
   font-size: 1.3rem;
   font-weight: 700;
+}
+
+.rappels-banner {
+  max-width: 480px;
+  margin: 0 auto;
+  cursor: pointer;
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--warning);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.35);
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.rappels-banner-danger {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--danger);
+  border-bottom-color: rgba(248, 113, 113, 0.35);
 }
 
 .view {
@@ -250,6 +269,24 @@ input:focus, select:focus { outline: 2px solid var(--primary); }
   font-size: 0.85rem;
   margin: 0;
 }
+
+.field-hint {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  text-align: center;
+}
+.status-overdue { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
+.status-soon { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+.status-ok { background: var(--surface-2); color: var(--text-muted); }
 
 .dialog-actions {
   display: flex;

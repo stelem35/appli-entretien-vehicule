@@ -2,11 +2,13 @@ import { initVehicules } from './vehicules.js';
 import { initEntretiens, refreshVehiculeSelects } from './entretiens.js';
 import { initExport, refreshVehiculeFilter, onDataChanged } from './export.js';
 import { initDashboard, refreshDashboard } from './dashboard.js';
+import { initRappels, refreshVehiculeSelects as refreshRappelVehiculeSelects, onDataChanged as onRappelsDataChanged } from './rappels.js';
 import { initBackup } from './backup.js';
 
 const VIEW_TITLES = {
   vehicules: 'Véhicules',
   entretiens: 'Entretiens',
+  rappels: 'Rappels',
   dashboard: 'Bilan',
   export: 'Export',
 };
@@ -54,15 +56,19 @@ async function main() {
   await initVehicules(() => {
     refreshVehiculeSelects();
     refreshVehiculeFilter();
+    refreshRappelVehiculeSelects();
     onDataChanged();
     refreshDashboard();
+    onRappelsDataChanged();
   });
   await initEntretiens(() => {
     onDataChanged();
     refreshDashboard();
+    onRappelsDataChanged();
   });
   await initExport();
   initDashboard();
+  await initRappels();
   initBackup();
 }
 

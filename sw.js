@@ -1,7 +1,7 @@
 // Bump this version on every deploy that touches a cached file below,
 // sinon les appareils déjà installés continuent de servir l'ancien cache
 // (le navigateur ne réinstalle le service worker que si ce fichier change).
-const CACHE_NAME = 'entretien-vehicule-v6';
+const CACHE_NAME = 'entretien-vehicule-v7';
 
 const APP_SHELL = [
   './',
@@ -16,6 +16,7 @@ const APP_SHELL = [
   './js/export.js',
   './js/backup.js',
   './js/dashboard.js',
+  './js/rappels.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',

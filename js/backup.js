@@ -19,6 +19,7 @@ async function exportBackup() {
   try {
     const vehicules = await db.getAll('vehicules');
     const entretiens = await db.getAll('entretiens');
+    const rappels = await db.getAll('rappels');
 
     const blobIds = new Set();
     vehicules.forEach((v) => v.photoBlobId && blobIds.add(v.photoBlobId));
@@ -35,6 +36,7 @@ async function exportBackup() {
       exportDate: new Date().toISOString(),
       vehicules,
       entretiens,
+      rappels,
       blobs,
     };
 
@@ -95,7 +97,7 @@ function handleFileSelected(e) {
 function confirmRestore(payload) {
   document.getElementById('confirm-title').textContent = 'Restaurer cette sauvegarde ?';
   document.getElementById('confirm-message').textContent =
-    `Cette sauvegarde contient ${payload.vehicules.length} véhicule(s) et ${payload.entretiens.length} entretien(s), datée du ${formatBackupDate(payload.exportDate)}. `
+    `Cette sauvegarde contient ${payload.vehicules.length} véhicule(s) et ${payload.entretiens.length} entretien(s)${payload.rappels ? ` et ${payload.rappels.length} rappel(s)` : ''}, datée du ${formatBackupDate(payload.exportDate)}. `
     + 'Toutes les données actuellement enregistrées sur cet appareil seront remplacées. Cette action est irréversible.';
 
   const okBtn = document.getElementById('confirm-ok');
@@ -114,6 +116,7 @@ async function restoreBackup(payload) {
   try {
     await db.clear('vehicules');
     await db.clear('entretiens');
+    await db.clear('rappels');
     await db.clear('blobs');
 
     for (const blob of payload.blobs || []) {
@@ -122,6 +125,7 @@ async function restoreBackup(payload) {
     }
     for (const v of payload.vehicules) await db.put('vehicules', v);
     for (const e of payload.entretiens) await db.put('entretiens', e);
+    for (const r of payload.rappels || []) await db.put('rappels', r);
 
     showToast('Restauration réussie');
     setTimeout(() => window.location.reload(), 600);

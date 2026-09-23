@@ -86,3 +86,11 @@ export function vehiculeLabel(v) {
   if (!v) return 'Véhicule inconnu';
   return [v.marque, v.modele].filter(Boolean).join(' ') || 'Véhicule sans nom';
 }
+
+// Nombre de jours entre aujourd'hui et une date ISO (négatif si la date est passée).
+export function daysUntil(iso) {
+  if (!iso) return null;
+  const today = new Date(todayISO() + 'T00:00:00');
+  const target = new Date(iso + 'T00:00:00');
+  return Math.round((target - today) / 86400000);
+}
