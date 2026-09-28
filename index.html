@@ -40,11 +40,30 @@
       <option value="prix-asc">Prix (bas)</option>
     </select>
   </div>
+  <div class="field">
+    <input type="text" id="entretien-texte-filter" placeholder="Rechercher (résumé, garage, type)">
+  </div>
+  <button type="button" id="entretien-date-filter-toggle" class="filter-toggle">Filtrer par date ⌄</button>
+  <div id="entretien-date-filter-fields" hidden>
+    <div class="field">
+      <label for="entretien-date-debut-filter">Du</label>
+      <input type="date" id="entretien-date-debut-filter">
+    </div>
+    <div class="field">
+      <label for="entretien-date-fin-filter">Au</label>
+      <input type="date" id="entretien-date-fin-filter">
+    </div>
+  </div>
   <section id="entretiens-list" class="list"></section>
   <p id="entretiens-empty" class="empty-state" hidden>Aucun entretien pour l'instant.</p>
 </main>
 
 <main id="view-rappels" class="view" hidden>
+  <section id="rappels-suggestions-section" class="suggestions-section" hidden>
+    <h2>Suggestions basées sur votre historique</h2>
+    <p class="chart-note">Calculées à partir de l'intervalle moyen entre vos entretiens du même type. Vous pouvez modifier la date et le kilométrage avant de créer le rappel.</p>
+    <div id="rappels-suggestions-list" class="list"></div>
+  </section>
   <section id="rappels-list" class="list"></section>
   <p id="rappels-empty" class="empty-state" hidden>Aucun rappel programmé. Ajoutez-en un avec le bouton "+".</p>
 </main>
@@ -191,7 +210,13 @@
       <label>Photo du véhicule</label>
       <div class="photo-picker">
         <img id="vehicule-photo-preview" class="photo-preview" hidden>
-        <input type="file" id="vehicule-photo" accept="image/*" capture="environment">
+        <button type="button" id="vehicule-photo-remove" class="btn-remove-photo" hidden>Retirer la photo</button>
+        <div class="photo-picker-actions">
+          <label for="vehicule-photo-camera" class="btn btn-ghost photo-picker-btn">📷 Prendre une photo</label>
+          <label for="vehicule-photo-gallery" class="btn btn-ghost photo-picker-btn">🖼️ Choisir une photo</label>
+        </div>
+        <input type="file" id="vehicule-photo-camera" accept="image/*" capture="environment" hidden>
+        <input type="file" id="vehicule-photo-gallery" accept="image/*" hidden>
       </div>
     </div>
 
@@ -266,7 +291,13 @@
       <label>Photo de la facture</label>
       <div class="photo-picker">
         <img id="entretien-photo-preview" class="photo-preview" hidden>
-        <input type="file" id="entretien-photo" accept="image/*" capture="environment">
+        <button type="button" id="entretien-photo-remove" class="btn-remove-photo" hidden>Retirer la photo</button>
+        <div class="photo-picker-actions">
+          <label for="entretien-photo-camera" class="btn btn-ghost photo-picker-btn">📷 Prendre une photo</label>
+          <label for="entretien-photo-gallery" class="btn btn-ghost photo-picker-btn">🖼️ Choisir une photo</label>
+        </div>
+        <input type="file" id="entretien-photo-camera" accept="image/*" capture="environment" hidden>
+        <input type="file" id="entretien-photo-gallery" accept="image/*" hidden>
       </div>
     </div>
 
@@ -303,6 +334,7 @@
         <option value="Batterie">Batterie</option>
         <option value="Climatisation">Climatisation</option>
         <option value="Amortisseurs">Amortisseurs</option>
+        <option value="Assurance">Assurance</option>
         <option value="Autre">Autre…</option>
       </select>
     </div>

@@ -7,19 +7,27 @@ import {
 
 let entretiens = [];
 let pendingPhotoBlob = null;
+let removePhotoRequested = false;
 let onChangeCallback = null;
 
 const listEl = document.getElementById('entretiens-list');
 const emptyEl = document.getElementById('entretiens-empty');
 const vehiculeFilter = document.getElementById('entretien-vehicule-filter');
 const sortSelect = document.getElementById('entretien-sort');
+const texteFilter = document.getElementById('entretien-texte-filter');
+const dateFilterToggle = document.getElementById('entretien-date-filter-toggle');
+const dateFilterFields = document.getElementById('entretien-date-filter-fields');
+const dateDebutFilter = document.getElementById('entretien-date-debut-filter');
+const dateFinFilter = document.getElementById('entretien-date-fin-filter');
 
 const dialog = document.getElementById('dialog-entretien');
 const form = document.getElementById('form-entretien');
 const titleEl = document.getElementById('dialog-entretien-title');
 const errorEl = document.getElementById('entretien-form-error');
-const photoInput = document.getElementById('entretien-photo');
+const photoCameraInput = document.getElementById('entretien-photo-camera');
+const photoGalleryInput = document.getElementById('entretien-photo-gallery');
 const photoPreview = document.getElementById('entretien-photo-preview');
+const photoRemoveBtn = document.getElementById('entretien-photo-remove');
 const vehiculeSelect = document.getElementById('entretien-vehicule');
 const typeSelect = document.getElementById('entretien-type');
 const typeAutreField = document.getElementById('entretien-type-autre-field');
@@ -39,13 +47,33 @@ export async function initEntretiens(onChange) {
 
   document.getElementById('fab').addEventListener('click', onFabClick);
   form.addEventListener('submit', handleSubmit);
-  photoInput.addEventListener('change', handlePhotoChange);
+  photoCameraInput.addEventListener('change', handlePhotoChange);
+  photoGalleryInput.addEventListener('change', handlePhotoChange);
+  photoRemoveBtn.addEventListener('click', handlePhotoRemove);
   dialog.addEventListener('close', resetForm);
   vehiculeFilter.addEventListener('change', render);
   sortSelect.addEventListener('change', render);
+  texteFilter.addEventListener('input', debounceRender());
+  dateDebutFilter.addEventListener('change', render);
+  dateFinFilter.addEventListener('change', render);
+  dateFilterToggle.addEventListener('click', toggleDateFilter);
   typeSelect.addEventListener('change', () => {
     typeAutreField.hidden = typeSelect.value !== 'Autre';
   });
+}
+
+let debounceTimer = null;
+function debounceRender() {
+  return () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(render, 200);
+  };
+}
+
+function toggleDateFilter() {
+  const isHidden = dateFilterFields.hidden;
+  dateFilterFields.hidden = !isHidden;
+  dateFilterToggle.textContent = isHidden ? 'Filtrer par date ⌃' : 'Filtrer par date ⌄';
 }
 
 export function refreshVehiculeSelects() {
@@ -66,9 +94,25 @@ async function refresh() {
   if (onChangeCallback) onChangeCallback();
 }
 
+function hasActiveFilters() {
+  return !!(vehiculeFilter.value || texteFilter.value.trim() || dateDebutFilter.value || dateFinFilter.value);
+}
+
 function getFiltered() {
   let list = entretiens.slice();
   if (vehiculeFilter.value) list = list.filter((e) => e.vehiculeId === vehiculeFilter.value);
+
+  const texte = texteFilter.value.trim().toLowerCase();
+  if (texte) {
+    list = list.filter((e) =>
+      (e.resume || '').toLowerCase().includes(texte)
+      || (e.nomGarage || '').toLowerCase().includes(texte)
+      || (e.typeEntretien || '').toLowerCase().includes(texte)
+    );
+  }
+
+  if (dateDebutFilter.value) list = list.filter((e) => e.dateEntretien >= dateDebutFilter.value);
+  if (dateFinFilter.value) list = list.filter((e) => e.dateEntretien <= dateFinFilter.value);
 
   const [field, dir] = sortSelect.value.split('-');
   const key = field === 'date' ? 'dateEntretien' : field === 'km' ? 'kilometrage' : 'prix';
@@ -84,6 +128,9 @@ async function render() {
   const list = getFiltered();
   listEl.innerHTML = '';
   emptyEl.hidden = list.length > 0;
+  emptyEl.textContent = hasActiveFilters()
+    ? 'Aucun entretien ne correspond à ces filtres.'
+    : 'Aucun entretien pour l\'instant.';
 
   for (const ent of list) {
     const v = getVehiculeById(ent.vehiculeId);
@@ -138,6 +185,7 @@ function onFabClick() {
 
 function openForm(id) {
   pendingPhotoBlob = null;
+  removePhotoRequested = false;
   errorEl.hidden = true;
   refreshVehiculeSelects();
 
@@ -169,10 +217,12 @@ function openForm(id) {
         if (blob) {
           photoPreview.src = blobToObjectURL(blob);
           photoPreview.hidden = false;
+          photoRemoveBtn.hidden = false;
         }
       });
     } else {
       photoPreview.hidden = true;
+      photoRemoveBtn.hidden = true;
     }
   } else {
     titleEl.textContent = 'Nouvel entretien';
@@ -181,6 +231,7 @@ function openForm(id) {
     document.getElementById('entretien-date').value = todayISO();
     typeAutreField.hidden = true;
     photoPreview.hidden = true;
+    photoRemoveBtn.hidden = true;
     if (getVehicules().length === 1) vehiculeSelect.value = getVehicules()[0].id;
   }
 
@@ -192,12 +243,24 @@ async function handlePhotoChange(e) {
   if (!file) return;
   try {
     pendingPhotoBlob = await resizeImage(file);
+    removePhotoRequested = false;
     photoPreview.src = blobToObjectURL(pendingPhotoBlob);
     photoPreview.hidden = false;
+    photoRemoveBtn.hidden = false;
   } catch (err) {
     errorEl.textContent = "Impossible de charger cette photo.";
     errorEl.hidden = false;
   }
+}
+
+function handlePhotoRemove() {
+  pendingPhotoBlob = null;
+  removePhotoRequested = true;
+  photoCameraInput.value = '';
+  photoGalleryInput.value = '';
+  photoPreview.hidden = true;
+  photoPreview.src = '';
+  photoRemoveBtn.hidden = true;
 }
 
 async function handleSubmit(e) {
@@ -235,6 +298,9 @@ async function handleSubmit(e) {
     const blobId = entretien.photoFactureBlobId || generateId();
     await db.saveBlob(blobId, pendingPhotoBlob);
     entretien.photoFactureBlobId = blobId;
+  } else if (removePhotoRequested && entretien.photoFactureBlobId) {
+    await db.deleteBlob(entretien.photoFactureBlobId);
+    entretien.photoFactureBlobId = null;
   }
 
   await db.put('entretiens', entretien);
@@ -246,8 +312,10 @@ async function handleSubmit(e) {
 function resetForm() {
   form.reset();
   pendingPhotoBlob = null;
+  removePhotoRequested = false;
   photoPreview.hidden = true;
   photoPreview.src = '';
+  photoRemoveBtn.hidden = true;
   errorEl.hidden = true;
   typeAutreField.hidden = true;
 }

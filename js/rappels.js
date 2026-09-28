@@ -1,7 +1,7 @@
 import * as db from './db.js';
 import { getVehicules, getVehiculeById } from './vehicules.js';
 import { getEntretiens } from './entretiens.js';
-import { generateId, showToast, vehiculeLabel, formatDate, formatKm, daysUntil } from './utils.js';
+import { generateId, showToast, vehiculeLabel, formatDate, formatKm, daysUntil, addDaysISO } from './utils.js';
 
 const SOON_DAYS = 30;
 const SOON_KM = 1000;
@@ -11,6 +11,8 @@ let onChangeCallback = null;
 
 const listEl = document.getElementById('rappels-list');
 const emptyEl = document.getElementById('rappels-empty');
+const suggestionsSection = document.getElementById('rappels-suggestions-section');
+const suggestionsList = document.getElementById('rappels-suggestions-list');
 
 const dialog = document.getElementById('dialog-rappel');
 const form = document.getElementById('form-rappel');
@@ -56,12 +58,14 @@ async function refresh() {
   rappels = await db.getAll('rappels');
   await render();
   renderBanner();
+  renderSuggestions();
   if (onChangeCallback) onChangeCallback();
 }
 
 export async function onDataChanged() {
   await render();
   renderBanner();
+  renderSuggestions();
 }
 
 // Estimation du kilométrage actuel : kilométrage du dernier entretien enregistré (par date).
@@ -153,6 +157,112 @@ async function render() {
 
     listEl.appendChild(card);
   }
+}
+
+// Calcule, pour chaque couple véhicule/type ayant au moins 2 entretiens du
+// même type, l'intervalle moyen réel (jours et km) et en déduit une prochaine
+// échéance suggérée. Rien n'est inventé : sans historique suffisant, pas de suggestion.
+function computeSuggestions() {
+  const existingKeys = new Set(rappels.map((r) => r.vehiculeId + '|' + r.typeEntretien));
+  const groups = new Map();
+  for (const e of getEntretiens()) {
+    const key = e.vehiculeId + '|' + e.typeEntretien;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(e);
+  }
+
+  const suggestions = [];
+  for (const [key, list] of groups) {
+    if (list.length < 2 || existingKeys.has(key)) continue;
+    list.sort((a, b) => a.dateEntretien.localeCompare(b.dateEntretien));
+
+    let daySum = 0, dayCount = 0, kmSum = 0, kmCount = 0;
+    for (let i = 1; i < list.length; i++) {
+      const d1 = new Date(list[i - 1].dateEntretien + 'T00:00:00');
+      const d2 = new Date(list[i].dateEntretien + 'T00:00:00');
+      const diffDays = Math.round((d2 - d1) / 86400000);
+      if (diffDays > 0) { daySum += diffDays; dayCount++; }
+
+      const km1 = Number(list[i - 1].kilometrage) || 0;
+      const km2 = Number(list[i].kilometrage) || 0;
+      const diffKm = km2 - km1;
+      if (diffKm > 0) { kmSum += diffKm; kmCount++; }
+    }
+    if (dayCount === 0 && kmCount === 0) continue;
+
+    const last = list[list.length - 1];
+    const avgDays = dayCount > 0 ? Math.round(daySum / dayCount) : null;
+    const avgKm = kmCount > 0 ? Math.round(kmSum / kmCount) : null;
+
+    suggestions.push({
+      vehiculeId: last.vehiculeId,
+      typeEntretien: last.typeEntretien,
+      suggestedDate: avgDays != null ? addDaysISO(last.dateEntretien, avgDays) : '',
+      suggestedKm: avgKm != null ? (Number(last.kilometrage) || 0) + avgKm : null,
+      avgDays,
+      avgKm,
+      basedOn: list.length,
+    });
+  }
+
+  return suggestions.sort((a, b) => (a.suggestedDate || '9999').localeCompare(b.suggestedDate || '9999'));
+}
+
+function renderSuggestions() {
+  const suggestions = computeSuggestions();
+  suggestionsSection.hidden = suggestions.length === 0;
+  suggestionsList.innerHTML = '';
+
+  for (const s of suggestions) {
+    const v = getVehiculeById(s.vehiculeId);
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const metaParts = [];
+    if (s.suggestedDate) metaParts.push(`<span>${formatDate(s.suggestedDate)} (~${Math.round(s.avgDays / 30)} mois)</span>`);
+    if (s.suggestedKm != null) metaParts.push(`<span>~${formatKm(s.suggestedKm)} (~${formatKm(s.avgKm)})</span>`);
+
+    card.innerHTML = `
+      <div class="card-thumb-placeholder">💡</div>
+      <div class="card-body">
+        <div class="card-title">${escapeHtml(s.typeEntretien)}</div>
+        <div class="card-subtitle">${vehiculeLabel(v)} · basé sur ${s.basedOn} entretiens</div>
+        <div class="card-meta">${metaParts.join('')}</div>
+      </div>
+      <div class="card-actions">
+        <button type="button" class="btn btn-ghost btn-small" data-action="create">Créer</button>
+      </div>
+    `;
+
+    card.querySelector('[data-action="create"]').addEventListener('click', () => openFormFromSuggestion(s));
+    suggestionsList.appendChild(card);
+  }
+}
+
+function openFormFromSuggestion(s) {
+  errorEl.hidden = true;
+  refreshVehiculeSelects();
+
+  titleEl.textContent = 'Nouveau rappel';
+  form.reset();
+  document.getElementById('rappel-id').value = '';
+  vehiculeSelect.value = s.vehiculeId;
+
+  const knownTypes = Array.from(typeSelect.options).map((o) => o.value).filter((v) => v !== 'Autre');
+  if (knownTypes.includes(s.typeEntretien)) {
+    typeSelect.value = s.typeEntretien;
+    typeAutreField.hidden = true;
+  } else {
+    typeSelect.value = 'Autre';
+    typeAutreField.hidden = false;
+    typeAutreInput.value = s.typeEntretien;
+  }
+
+  dateInput.value = s.suggestedDate || '';
+  kmInput.value = s.suggestedKm != null ? s.suggestedKm : '';
+  noteInput.value = `Suggéré d'après l'historique (intervalle moyen sur ${s.basedOn} entretiens)`;
+
+  dialog.showModal();
 }
 
 function onFabClick() {

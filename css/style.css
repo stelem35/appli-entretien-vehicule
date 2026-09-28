@@ -256,6 +256,28 @@ input, select {
 input:focus, select:focus { outline: 2px solid var(--primary); }
 
 .photo-picker { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.btn-remove-photo {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-size: 0.82rem;
+  padding: 2px 0;
+  margin-top: -4px;
+  cursor: pointer;
+}
+.btn-remove-photo[hidden] { display: none; }
+
+.photo-picker-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.photo-picker-btn {
+  flex: 1 1 140px;
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 10px 12px;
+}
 .photo-preview {
   width: 100%;
   max-height: 180px;
@@ -315,6 +337,26 @@ input:focus, select:focus { outline: 2px solid var(--primary); }
   margin-bottom: 12px;
 }
 .toolbar select { flex: 1; }
+
+#view-entretiens > .field { margin-bottom: 8px; }
+
+.filter-toggle {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 6px 2px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+#entretien-date-filter-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+#entretien-date-filter-fields[hidden] { display: none; }
 
 .filters {
   display: flex;
@@ -386,6 +428,18 @@ input:focus, select:focus { outline: 2px solid var(--primary); }
 .bar-h-track { height: 12px; }
 .bar-h { height: 100%; background: var(--primary); border-radius: 0 4px 4px 0; }
 .bar-row-value { font-size: 0.8rem; min-width: 64px; text-align: right; }
+
+.suggestions-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.suggestions-section h2 { font-size: 0.95rem; margin: 0 0 4px; }
+.suggestions-section .chart-note { margin: 0 0 12px; }
+.suggestions-section .list { gap: 8px; }
+.btn-small { padding: 8px 12px; font-size: 0.82rem; white-space: nowrap; }
 
 .backup-section {
   margin-top: 28px;

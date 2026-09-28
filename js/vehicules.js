@@ -12,8 +12,10 @@ const dialog = document.getElementById('dialog-vehicule');
 const form = document.getElementById('form-vehicule');
 const titleEl = document.getElementById('dialog-vehicule-title');
 const errorEl = document.getElementById('vehicule-form-error');
-const photoInput = document.getElementById('vehicule-photo');
+const photoCameraInput = document.getElementById('vehicule-photo-camera');
+const photoGalleryInput = document.getElementById('vehicule-photo-gallery');
 const photoPreview = document.getElementById('vehicule-photo-preview');
+const photoRemoveBtn = document.getElementById('vehicule-photo-remove');
 
 const TYPE_LABELS = {
   voiture: 'Voiture',
@@ -37,7 +39,9 @@ export async function initVehicules(onChange) {
 
   document.getElementById('fab').addEventListener('click', onFabClick);
   form.addEventListener('submit', handleSubmit);
-  photoInput.addEventListener('change', handlePhotoChange);
+  photoCameraInput.addEventListener('change', handlePhotoChange);
+  photoGalleryInput.addEventListener('change', handlePhotoChange);
+  photoRemoveBtn.addEventListener('click', handlePhotoRemove);
   dialog.addEventListener('close', resetForm);
 }
 
@@ -116,16 +120,19 @@ function openForm(id) {
         if (blob) {
           photoPreview.src = blobToObjectURL(blob);
           photoPreview.hidden = false;
+          photoRemoveBtn.hidden = false;
         }
       });
     } else {
       photoPreview.hidden = true;
+      photoRemoveBtn.hidden = true;
     }
   } else {
     titleEl.textContent = 'Nouveau véhicule';
     form.reset();
     document.getElementById('vehicule-id').value = '';
     photoPreview.hidden = true;
+    photoRemoveBtn.hidden = true;
   }
 
   dialog.showModal();
@@ -139,10 +146,21 @@ async function handlePhotoChange(e) {
     removePhotoRequested = false;
     photoPreview.src = blobToObjectURL(pendingPhotoBlob);
     photoPreview.hidden = false;
+    photoRemoveBtn.hidden = false;
   } catch (err) {
     errorEl.textContent = "Impossible de charger cette photo.";
     errorEl.hidden = false;
   }
+}
+
+function handlePhotoRemove() {
+  pendingPhotoBlob = null;
+  removePhotoRequested = true;
+  photoCameraInput.value = '';
+  photoGalleryInput.value = '';
+  photoPreview.hidden = true;
+  photoPreview.src = '';
+  photoRemoveBtn.hidden = true;
 }
 
 async function handleSubmit(e) {
@@ -196,6 +214,7 @@ function resetForm() {
   removePhotoRequested = false;
   photoPreview.hidden = true;
   photoPreview.src = '';
+  photoRemoveBtn.hidden = true;
   errorEl.hidden = true;
 }
 

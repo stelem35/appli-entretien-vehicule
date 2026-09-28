@@ -94,3 +94,10 @@ export function daysUntil(iso) {
   const target = new Date(iso + 'T00:00:00');
   return Math.round((target - today) / 86400000);
 }
+
+// Ajoute un nombre de jours à une date ISO et renvoie une date ISO.
+export function addDaysISO(iso, days) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
