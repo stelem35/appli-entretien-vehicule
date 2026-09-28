@@ -63,7 +63,9 @@ function getFiltered() {
     .filter((e) => !fin || e.dateEntretien <= fin)
     .filter((e) => {
       if (!texte) return true;
-      return (e.resume || '').toLowerCase().includes(texte) || (e.nomGarage || '').toLowerCase().includes(texte);
+      return (e.resume || '').toLowerCase().includes(texte)
+        || (e.nomGarage || '').toLowerCase().includes(texte)
+        || (e.typeEntretien || '').toLowerCase().includes(texte);
     })
     .sort((a, b) => b.dateEntretien.localeCompare(a.dateEntretien));
 }
