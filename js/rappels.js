@@ -381,6 +381,8 @@ async function handleSubmit(e) {
   await db.put('rappels', rappel);
 
   let syncNote = '';
+  // Synchro pas encore activée sur cet appareil : on le dit au lieu de ne rien envoyer en silence
+  if (!gcal.isEnabled() && rappel.dateEcheance) syncNote = ' (non envoyé à Google Agenda : touche « Tout synchroniser »)';
   if (wantSync) {
     if (!googleOk) syncNote = ' (alerte Google non synchronisée)';
     else {
