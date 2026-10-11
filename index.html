@@ -14,6 +14,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/style.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -59,6 +60,13 @@
 </main>
 
 <main id="view-rappels" class="view" hidden>
+  <section class="gsync">
+    <div class="gsync-text">
+      <strong>Google Agenda</strong>
+      <small id="gsync-status"></small>
+    </div>
+    <button type="button" id="gsync-btn" class="btn btn-ghost btn-small">Tout synchroniser</button>
+  </section>
   <section id="rappels-suggestions-section" class="suggestions-section" hidden>
     <h2>Suggestions basées sur votre historique</h2>
     <p class="chart-note">Calculées à partir de l'intervalle moyen entre vos entretiens du même type. Vous pouvez modifier la date et le kilométrage avant de créer le rappel.</p>

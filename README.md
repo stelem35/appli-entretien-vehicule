@@ -25,9 +25,16 @@ python -m http.server 8420
 
 Puis ouvrir `http://localhost:8420`.
 
-## Déploiement Netlify
+## Déploiement GitHub Pages
 
-Aucune configuration de build nécessaire : c'est un site statique, publier le dossier racine tel quel (`index.html` à la racine).
+Aucune configuration de build nécessaire : c'est un site statique, publié depuis la branche `main` (dossier racine) via GitHub Pages.
+Adresse : https://stelem35.github.io/appli-entretien-vehicule/ — les données sont stockées dans le navigateur, par adresse : changer d'adresse impose d'importer une sauvegarde JSON.
+
+## Alertes Google Agenda
+
+Dans l'onglet Rappels, « Tout synchroniser » (ou la création/modification d'un rappel) envoie les rappels **datés** dans le calendrier Google « Échéances » :
+événement sur la journée de l'échéance, rappel 4 semaines avant. Les rappels au kilométrage seul restent dans l'app.
+Format commun aux apps : voir `contrat-echeances-agenda.md` (dépôt Appli_Suivi_Abonnements).
 
 ## Notes
 

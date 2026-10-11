@@ -1,7 +1,7 @@
 // Bump this version on every deploy that touches a cached file below,
 // sinon les appareils déjà installés continuent de servir l'ancien cache
 // (le navigateur ne réinstalle le service worker que si ce fichier change).
-const CACHE_NAME = 'entretien-vehicule-v9';
+const CACHE_NAME = 'entretien-vehicule-v10';
 
 const APP_SHELL = [
   './',
@@ -17,6 +17,7 @@ const APP_SHELL = [
   './js/backup.js',
   './js/dashboard.js',
   './js/rappels.js',
+  './js/gcal.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/icon-maskable-512.png',
@@ -46,6 +47,11 @@ self.addEventListener('activate', (event) => {
 // Stratégie "cache first, repli réseau" : fonctionne hors-ligne dès le 1er chargement en ligne.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // Seuls l'app elle-même et les bibliothèques PDF (jsDelivr) sont mis en cache : jamais l'API ni la connexion Google,
+  // sinon d'anciennes réponses de l'agenda seraient servies à la place des données à jour.
+  const { origin, hostname } = new URL(event.request.url);
+  if (origin !== self.location.origin && !hostname.endsWith('jsdelivr.net')) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

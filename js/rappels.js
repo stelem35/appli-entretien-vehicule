@@ -2,6 +2,7 @@ import * as db from './db.js';
 import { getVehicules, getVehiculeById } from './vehicules.js';
 import { getEntretiens } from './entretiens.js';
 import { generateId, showToast, vehiculeLabel, formatDate, formatKm, daysUntil, addDaysISO } from './utils.js';
+import * as gcal from './gcal.js';
 
 const SOON_DAYS = 30;
 const SOON_KM = 1000;
@@ -46,6 +47,32 @@ export async function initRappels(onChange) {
   banner.addEventListener('click', () => {
     document.querySelector('.nav-btn[data-view="rappels"]').click();
   });
+  document.getElementById('gsync-btn').addEventListener('click', handleSyncAll);
+  renderGsync();
+}
+
+// --- Synchronisation vers Google Agenda (calendrier « Échéances ») ---
+
+function renderGsync() {
+  const last = gcal.lastSync();
+  const when = last ? new Date(last).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : null;
+  document.getElementById('gsync-status').textContent = gcal.isEnabled()
+    ? `Actif · ${when ? 'dernière synchro le ' + when : 'pas encore synchronisé'}`
+    : 'Envoie les rappels datés dans le calendrier « Échéances »';
+}
+
+async function handleSyncAll() {
+  const btn = document.getElementById('gsync-btn');
+  btn.disabled = true;
+  try {
+    if (!gcal.hasToken()) await gcal.signIn();
+    const c = await gcal.syncAll(rappels, getVehiculeById);
+    showToast(`Synchronisé : ${c.created} créé(s), ${c.updated} mis à jour, ${c.removed} supprimé(s)`, 3500);
+  } catch (err) {
+    showToast(`Synchronisation impossible : ${err.message}`, 3500);
+  }
+  btn.disabled = false;
+  renderGsync();
 }
 
 export function refreshVehiculeSelects() {
@@ -343,9 +370,27 @@ async function handleSubmit(e) {
   const existing = isNew ? null : rappels.find((r) => r.id === id);
   rappel.dateCreation = existing ? existing.dateCreation : rappel.dateCreation;
 
+  // Synchro Google : concerne les rappels datés (ou ceux qui l'étaient, pour retirer l'alerte).
+  // La fenêtre Google doit s'ouvrir directement sur l'appui, donc avant toute autre opération asynchrone.
+  const wantSync = gcal.isEnabled() && !!(rappel.dateEcheance || existing?.dateEcheance);
+  let googleOk = true;
+  if (wantSync && !gcal.hasToken()) {
+    try { await gcal.signIn(); } catch { googleOk = false; }
+  }
+
   await db.put('rappels', rappel);
+
+  let syncNote = '';
+  if (wantSync) {
+    if (!googleOk) syncNote = ' (alerte Google non synchronisée)';
+    else {
+      try { await gcal.syncRappel(rappel, getVehiculeById(rappel.vehiculeId)); }
+      catch { syncNote = ' (alerte Google non synchronisée)'; }
+    }
+  }
+
   dialog.close();
-  showToast(isNew ? 'Rappel ajouté' : 'Rappel modifié');
+  showToast((isNew ? 'Rappel ajouté' : 'Rappel modifié') + syncNote, syncNote ? 3500 : 2200);
   await refresh();
 }
 
@@ -365,8 +410,21 @@ async function confirmDelete(id) {
   const handler = async () => {
     okBtn.removeEventListener('click', handler);
     confirmDialog.close();
+    const wantSync = gcal.isEnabled() && !!r.dateEcheance;
+    let googleOk = true;
+    if (wantSync && !gcal.hasToken()) {
+      try { await gcal.signIn(); } catch { googleOk = false; }
+    }
     await db.remove('rappels', id);
-    showToast('Rappel supprimé');
+    let msg = 'Rappel supprimé';
+    if (wantSync) {
+      if (!googleOk) msg += ' (alerte Google à supprimer à la main)';
+      else {
+        try { await gcal.removeRappel(id); }
+        catch { msg += ' (alerte Google non supprimée)'; }
+      }
+    }
+    showToast(msg, msg.length > 20 ? 3500 : 2200);
     await refresh();
   };
   okBtn.addEventListener('click', handler);
