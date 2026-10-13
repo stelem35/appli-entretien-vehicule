@@ -78,8 +78,10 @@ export function showToast(message, duration = 2200) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
   toast.hidden = false;
+  // Les messages longs restent affichés plus longtemps (jusqu'à 9 s) ; un appui le ferme plus tôt
+  toast.onclick = () => { toast.hidden = true; };
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => { toast.hidden = true; }, duration);
+  showToast._t = setTimeout(() => { toast.hidden = true; }, Math.min(9000, Math.max(duration, message.length * 70)));
 }
 
 export function vehiculeLabel(v) {

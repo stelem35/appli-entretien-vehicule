@@ -2,3 +2,6 @@
 Thumbs.db
 node_modules/
 /*.pdf
+
+# Fichier de suivi privé : ne jamais publier
+suivi-projet-entretien-vehicule.md
