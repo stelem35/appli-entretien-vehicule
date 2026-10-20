@@ -20,10 +20,12 @@ async function exportBackup() {
     const vehicules = await db.getAll('vehicules');
     const entretiens = await db.getAll('entretiens');
     const rappels = await db.getAll('rappels');
+    const devis = await db.getAll('devis');
 
     const blobIds = new Set();
     vehicules.forEach((v) => v.photoBlobId && blobIds.add(v.photoBlobId));
     entretiens.forEach((e) => e.photoFactureBlobId && blobIds.add(e.photoFactureBlobId));
+    devis.forEach((d) => d.photoBlobId && blobIds.add(d.photoBlobId));
 
     const blobs = [];
     for (const id of blobIds) {
@@ -37,6 +39,7 @@ async function exportBackup() {
       vehicules,
       entretiens,
       rappels,
+      devis,
       blobs,
     };
 
@@ -96,8 +99,12 @@ function handleFileSelected(e) {
 
 function confirmRestore(payload) {
   document.getElementById('confirm-title').textContent = 'Restaurer cette sauvegarde ?';
+  const parts = [`${payload.vehicules.length} véhicule(s)`, `${payload.entretiens.length} entretien(s)`];
+  if (payload.rappels) parts.push(`${payload.rappels.length} rappel(s)`);
+  if (payload.devis) parts.push(`${payload.devis.length} devis`);
+  const contenu = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}` : parts[0];
   document.getElementById('confirm-message').textContent =
-    `Cette sauvegarde contient ${payload.vehicules.length} véhicule(s) et ${payload.entretiens.length} entretien(s)${payload.rappels ? ` et ${payload.rappels.length} rappel(s)` : ''}, datée du ${formatBackupDate(payload.exportDate)}. `
+    `Cette sauvegarde contient ${contenu}, datée du ${formatBackupDate(payload.exportDate)}. `
     + 'Toutes les données actuellement enregistrées sur cet appareil seront remplacées. Cette action est irréversible.';
 
   const okBtn = document.getElementById('confirm-ok');
@@ -109,6 +116,11 @@ function confirmRestore(payload) {
     await restoreBackup(payload);
   };
   okBtn.addEventListener('click', handler);
+  // Sur « Annuler », retire l'écouteur et rend au bouton son libellé « Supprimer ».
+  confirmDialog.addEventListener('close', () => {
+    okBtn.removeEventListener('click', handler);
+    okBtn.textContent = 'Supprimer';
+  }, { once: true });
   confirmDialog.showModal();
 }
 
@@ -117,6 +129,7 @@ async function restoreBackup(payload) {
     await db.clear('vehicules');
     await db.clear('entretiens');
     await db.clear('rappels');
+    await db.clear('devis');
     await db.clear('blobs');
 
     for (const blob of payload.blobs || []) {
@@ -126,6 +139,7 @@ async function restoreBackup(payload) {
     for (const v of payload.vehicules) await db.put('vehicules', v);
     for (const e of payload.entretiens) await db.put('entretiens', e);
     for (const r of payload.rappels || []) await db.put('rappels', r);
+    for (const d of payload.devis || []) await db.put('devis', d);
 
     showToast('Restauration réussie');
     setTimeout(() => window.location.reload(), 600);

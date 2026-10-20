@@ -221,11 +221,15 @@ function resetForm() {
 async function confirmDelete(id) {
   const v = getVehiculeById(id);
   const entretiensLies = await db.getAllByIndex('entretiens', 'vehiculeId', id);
+  const devisLies = await db.getAllByIndex('devis', 'vehiculeId', id);
 
   const confirmDialog = document.getElementById('dialog-confirm');
   document.getElementById('confirm-title').textContent = 'Supprimer ce véhicule ?';
-  document.getElementById('confirm-message').textContent = entretiensLies.length > 0
-    ? `${vehiculeLabel(v)} a ${entretiensLies.length} entretien(s) enregistré(s). Ils seront également supprimés. Cette action est irréversible.`
+  const liens = [];
+  if (entretiensLies.length > 0) liens.push(`${entretiensLies.length} entretien(s)`);
+  if (devisLies.length > 0) liens.push(`${devisLies.length} devis`);
+  document.getElementById('confirm-message').textContent = liens.length > 0
+    ? `${vehiculeLabel(v)} a ${liens.join(' et ')} enregistré(s). Ils seront également supprimés. Cette action est irréversible.`
     : `Supprimer définitivement ${vehiculeLabel(v)} ?`;
 
   const okBtn = document.getElementById('confirm-ok');
@@ -237,6 +241,10 @@ async function confirmDelete(id) {
       if (ent.photoFactureBlobId) await db.deleteBlob(ent.photoFactureBlobId);
       await db.remove('entretiens', ent.id);
     }
+    for (const dv of devisLies) {
+      if (dv.photoBlobId) await db.deleteBlob(dv.photoBlobId);
+      await db.remove('devis', dv.id);
+    }
     if (v.photoBlobId) await db.deleteBlob(v.photoBlobId);
     await db.remove('vehicules', id);
 
@@ -245,6 +253,7 @@ async function confirmDelete(id) {
     if (onChangeCallback) onChangeCallback();
   };
   okBtn.addEventListener('click', handler);
+  confirmDialog.addEventListener('close', () => okBtn.removeEventListener('click', handler), { once: true });
   confirmDialog.showModal();
 }
 

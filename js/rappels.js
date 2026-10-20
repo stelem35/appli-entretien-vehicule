@@ -430,6 +430,7 @@ async function confirmDelete(id) {
     await refresh();
   };
   okBtn.addEventListener('click', handler);
+  confirmDialog.addEventListener('close', () => okBtn.removeEventListener('click', handler), { once: true });
   confirmDialog.showModal();
 }
 

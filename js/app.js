@@ -2,12 +2,14 @@ import { initVehicules } from './vehicules.js';
 import { initEntretiens, refreshVehiculeSelects } from './entretiens.js';
 import { initExport, refreshVehiculeFilter, onDataChanged } from './export.js';
 import { initDashboard, refreshDashboard } from './dashboard.js';
+import { initDevis, reloadDevis, refreshVehiculeSelects as refreshDevisVehiculeSelects } from './devis.js';
 import { initRappels, refreshVehiculeSelects as refreshRappelVehiculeSelects, onDataChanged as onRappelsDataChanged } from './rappels.js';
 import { initBackup } from './backup.js';
 
 const VIEW_TITLES = {
   vehicules: 'Véhicules',
   entretiens: 'Entretiens',
+  devis: 'Devis',
   rappels: 'Rappels',
   dashboard: 'Bilan',
   export: 'Export',
@@ -57,6 +59,8 @@ async function main() {
     refreshVehiculeSelects();
     refreshVehiculeFilter();
     refreshRappelVehiculeSelects();
+    refreshDevisVehiculeSelects();
+    reloadDevis();
     onDataChanged();
     refreshDashboard();
     onRappelsDataChanged();
@@ -67,6 +71,7 @@ async function main() {
     onRappelsDataChanged();
   });
   await initExport();
+  await initDevis();
   initDashboard();
   await initRappels();
   initBackup();

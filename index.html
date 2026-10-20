@@ -59,6 +59,36 @@
   <p id="entretiens-empty" class="empty-state" hidden>Aucun entretien pour l'instant.</p>
 </main>
 
+<main id="view-devis" class="view" hidden>
+  <div class="toolbar">
+    <select id="devis-vehicule-filter" aria-label="Véhicule"></select>
+    <select id="devis-statut-filter" aria-label="Statut">
+      <option value="">Tous statuts</option>
+      <option value="attente">En attente</option>
+      <option value="retenu">Retenus</option>
+      <option value="ecarte">Écartés</option>
+    </select>
+  </div>
+  <div class="field">
+    <input type="text" id="devis-texte-filter" placeholder="Rechercher (objet, garage, type, note)">
+  </div>
+  <div class="toolbar">
+    <div class="segmented" role="group" aria-label="Affichage">
+      <button type="button" id="devis-mode-list" class="active">Liste</button>
+      <button type="button" id="devis-mode-compare">Comparer</button>
+    </div>
+    <select id="devis-sort" aria-label="Trier par">
+      <option value="date-desc">Date (récent)</option>
+      <option value="date-asc">Date (ancien)</option>
+      <option value="prix-asc">Prix (bas)</option>
+      <option value="prix-desc">Prix (haut)</option>
+    </select>
+  </div>
+  <p id="devis-compare-hint" class="chart-note" hidden>Les devis sont regroupés par véhicule et type de travaux, du moins cher au plus cher. Pour séparer deux travaux de même type (ex. freins avant / arrière), précise-les dans l'objet du devis.</p>
+  <section id="devis-list" class="list"></section>
+  <p id="devis-empty" class="empty-state" hidden>Aucun devis pour l'instant. Ajoutes-en un avec le bouton "+".</p>
+</main>
+
 <main id="view-rappels" class="view" hidden>
   <section class="gsync">
     <div class="gsync-text">
@@ -158,6 +188,9 @@
   </button>
   <button type="button" class="nav-btn" data-view="entretiens">
     <span class="nav-icon">🔧</span><span>Entretiens</span>
+  </button>
+  <button type="button" class="nav-btn" data-view="devis">
+    <span class="nav-icon">🧾</span><span>Devis</span>
   </button>
   <button type="button" class="nav-btn" data-view="rappels">
     <span class="nav-icon">🔔</span><span>Rappels</span>
@@ -313,6 +346,96 @@
 
     <div class="dialog-actions">
       <button type="button" class="btn btn-ghost" data-close-dialog="dialog-entretien">Annuler</button>
+      <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Dialogue devis -->
+<dialog id="dialog-devis">
+  <form method="dialog" id="form-devis" class="dialog-form">
+    <h2 id="dialog-devis-title">Nouveau devis</h2>
+    <input type="hidden" id="devis-id">
+
+    <div class="field">
+      <label for="devis-vehicule">Véhicule concerné</label>
+      <select id="devis-vehicule" required></select>
+    </div>
+
+    <div class="field">
+      <label for="devis-date">Date du devis</label>
+      <input type="date" id="devis-date" required>
+    </div>
+
+    <div class="field">
+      <label for="devis-type">Type de travaux</label>
+      <select id="devis-type" required>
+        <option value="Vidange">Vidange</option>
+        <option value="Révision">Révision</option>
+        <option value="Freins">Freins</option>
+        <option value="Pneus">Pneus</option>
+        <option value="Distribution/courroie">Distribution / courroie</option>
+        <option value="Filtres">Filtres</option>
+        <option value="Contrôle technique">Contrôle technique</option>
+        <option value="Batterie">Batterie</option>
+        <option value="Climatisation">Climatisation</option>
+        <option value="Amortisseurs">Amortisseurs</option>
+        <option value="Autre">Autre…</option>
+      </select>
+    </div>
+    <div class="field" id="devis-type-autre-field" hidden>
+      <label for="devis-type-autre">Préciser le type</label>
+      <input type="text" id="devis-type-autre">
+    </div>
+
+    <div class="field">
+      <label for="devis-resume">Objet du devis</label>
+      <input type="text" id="devis-resume" placeholder="ex : kit distribution + pompe à eau" required>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="devis-prix">Prix TTC (€)</label>
+        <input type="number" id="devis-prix" min="0" step="0.01" required>
+      </div>
+      <div class="field">
+        <label for="devis-statut">Statut</label>
+        <select id="devis-statut">
+          <option value="attente">En attente</option>
+          <option value="retenu">Retenu</option>
+          <option value="ecarte">Écarté</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="devis-garage">Nom du garage</label>
+      <input type="text" id="devis-garage" required>
+    </div>
+
+    <div class="field">
+      <label for="devis-note">Note</label>
+      <input type="text" id="devis-note" placeholder="ex : délai 2 semaines, garantie 1 an">
+    </div>
+
+    <div class="field">
+      <label>Photo du devis</label>
+      <div class="photo-picker">
+        <img id="devis-photo-preview" class="photo-preview" hidden>
+        <button type="button" id="devis-photo-remove" class="btn-remove-photo" hidden>Retirer la photo</button>
+        <div class="photo-picker-actions">
+          <label for="devis-photo-camera" class="btn btn-ghost photo-picker-btn">📷 Prendre une photo</label>
+          <label for="devis-photo-gallery" class="btn btn-ghost photo-picker-btn">🖼️ Choisir une photo</label>
+        </div>
+        <input type="file" id="devis-photo-camera" accept="image/*" capture="environment" hidden>
+        <input type="file" id="devis-photo-gallery" accept="image/*" hidden>
+      </div>
+    </div>
+
+    <p class="form-error" id="devis-form-error" hidden></p>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" data-close-dialog="dialog-devis">Annuler</button>
       <button type="submit" class="btn btn-primary">Enregistrer</button>
     </div>
   </form>
