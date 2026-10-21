@@ -180,6 +180,10 @@ async function generatePdf() {
     startY,
     margin: { top: 26 },
     styles: { fontSize: 9 },
+    // Km et Prix : colonne juste assez large pour tenir sur une seule ligne (ex. « 271 736 km », « 124,95 € »)
+    columnStyles: multiVehicule
+      ? { 2: { cellWidth: 'wrap' }, 5: { cellWidth: 'wrap' } }
+      : { 1: { cellWidth: 'wrap' }, 4: { cellWidth: 'wrap' } },
     headStyles: { fillColor: [15, 23, 42] },
     foot: [multiVehicule
       ? ['', '', '', '', 'Total', formatCurrency(total), '']
