@@ -8,11 +8,14 @@ export const options = {
 
 export const TYPE_ACHAT = 'Achat du véhicule';
 
-// Un entretien de type « 1er achat » (ou tout type contenant « achat ») est l'achat d'un précédent propriétaire.
+// Seul un type « 1er achat » / « premier achat » désigne l'achat d'un précédent propriétaire
+// (« Injecteur / Achat » ou « Achat pneus » sont de vraies dépenses du propriétaire actuel).
 export function isAchatPrecedent(type) {
-  return /\bachat\b/i.test(type || '');
+  return /^\s*(1er|1ère|1re|premier|première)\s+achat\s*$/i.test(type || '');
 }
 
+// `achat` = achat du véhicule saisi dans la fiche (jamais compté comme un entretien) ;
+// `precedent` = entretien de type « 1er achat » d'un précédent propriétaire (compté dans les entretiens s'il est inclus).
 // Transforme les entretiens + l'achat saisi dans la fiche véhicule en lignes de dépense homogènes.
 export function buildLignes(entretiens, vehicules, { vehiculeId = '', inclureAchat = true, inclureAchatsPrecedents = false } = {}) {
   const lignes = [];
@@ -27,7 +30,8 @@ export function buildLignes(entretiens, vehicules, { vehiculeId = '', inclureAch
       type: e.typeEntretien,
       prix: Number(e.prix) || 0,
       km: Number(e.kilometrage) || 0,
-      achat: precedent,
+      achat: false,
+      precedent,
     });
   });
 
@@ -43,6 +47,7 @@ export function buildLignes(entretiens, vehicules, { vehiculeId = '', inclureAch
         prix,
         km: Number(v.kmAchat) || 0,
         achat: true,
+        precedent: false,
       });
     });
   }

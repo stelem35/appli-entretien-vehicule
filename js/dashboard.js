@@ -1,6 +1,6 @@
 import { getVehicules } from './vehicules.js';
 import { getEntretiens } from './entretiens.js';
-import { vehiculeLabel, formatKm } from './utils.js';
+import { vehiculeLabel, formatKm, formatDate } from './utils.js';
 import { options, buildLignes, filterPeriode, computeKpis } from './bilan.js';
 
 const vehiculeSelect = document.getElementById('dashboard-vehicule');
@@ -12,6 +12,7 @@ const periodError = document.getElementById('dashboard-period-error');
 const achatCheckbox = document.getElementById('dashboard-inclure-achat');
 const precedentsCheckbox = document.getElementById('dashboard-inclure-precedents');
 const achatHint = document.getElementById('dashboard-achat-hint');
+const precedentsNote = document.getElementById('dashboard-precedents-note');
 const kpiTotal = document.getElementById('kpi-total');
 const kpiCount = document.getElementById('kpi-count');
 const kpiPerKm = document.getElementById('kpi-perkm');
@@ -87,6 +88,17 @@ function render() {
   const filtered = filterPeriode(base, debut, fin);
 
   const concernes = getVehicules().filter((v) => !vehiculeId || v.id === vehiculeId);
+  // Montre ce que l'interrupteur « précédent propriétaire » exclut ou inclut, pour que l'effet soit vérifiable.
+  const precedents = filterPeriode(
+    buildLignes(getEntretiens(), getVehicules(), { vehiculeId, inclureAchat: false, inclureAchatsPrecedents: true }),
+    debut,
+    fin
+  ).filter((l) => l.precedent);
+  precedentsNote.hidden = precedents.length === 0;
+  precedentsNote.textContent = precedents.length === 0 ? '' :
+    `${precedents.length} entretien(s) de type « 1er achat » sur la période (${euros(precedents.reduce((s, l) => s + l.prix, 0))}) : ` +
+    precedents.map((l) => `${l.type} ${formatDate(l.date)}`).join(', ') +
+    (options.inclureAchatsPrecedents ? ' — inclus.' : ' — exclus.');
   achatHint.hidden = !options.inclureAchat || concernes.some((v) => Number(v.prixAchat) > 0);
 
   renderKpis(filtered);
