@@ -1,7 +1,7 @@
 // Bump this version on every deploy that touches a cached file below,
 // sinon les appareils déjà installés continuent de servir l'ancien cache
 // (le navigateur ne réinstalle le service worker que si ce fichier change).
-const CACHE_NAME = 'entretien-vehicule-v18';
+const CACHE_NAME = 'entretien-vehicule-v19';
 
 const APP_SHELL = [
   './',
@@ -17,6 +17,7 @@ const APP_SHELL = [
   './js/backup.js',
   './js/dashboard.js',
   './js/bilan.js',
+  './js/version.js',
   './js/devis.js',
   './js/rappels.js',
   './js/gcal.js',
@@ -31,7 +32,9 @@ const APP_SHELL = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      // cache: 'reload' = toujours télécharger depuis le serveur, sinon d'anciens fichiers encore en cache HTTP
+      // (GitHub Pages : 10 min) seraient rangés sous le nouveau numéro de version.
+      .then((cache) => cache.addAll(APP_SHELL.map((url) => new Request(url, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });
@@ -49,6 +52,8 @@ self.addEventListener('activate', (event) => {
 // Stratégie "cache first, repli réseau" : fonctionne hors-ligne dès le 1er chargement en ligne.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // sw.js lui-même (lu par l'app pour savoir quelle version est en ligne) : toujours le réseau, jamais le cache.
+  if (new URL(event.request.url).pathname.endsWith('/sw.js')) return;
 
   // Seuls l'app elle-même et les bibliothèques PDF (jsDelivr) sont mis en cache : jamais l'API ni la connexion Google,
   // sinon d'anciennes réponses de l'agenda seraient servies à la place des données à jour.

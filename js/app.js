@@ -5,6 +5,7 @@ import { initDashboard, refreshDashboard } from './dashboard.js';
 import { initDevis, reloadDevis, refreshVehiculeSelects as refreshDevisVehiculeSelects } from './devis.js';
 import { initRappels, refreshVehiculeSelects as refreshRappelVehiculeSelects, onDataChanged as onRappelsDataChanged } from './rappels.js';
 import { initBackup } from './backup.js';
+import { initVersion } from './version.js';
 
 const VIEW_TITLES = {
   vehicules: 'Véhicules',
@@ -43,7 +44,7 @@ function initDialogClosers() {
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {
+      navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {
         // Le fonctionnement hors-ligne ne sera pas disponible, l'app reste utilisable en ligne.
       });
     });
@@ -75,6 +76,7 @@ async function main() {
   initDashboard();
   await initRappels();
   initBackup();
+  initVersion();
 }
 
 main();

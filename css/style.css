@@ -530,6 +530,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 .suggestions-section .list { gap: 8px; }
 .btn-small { padding: 8px 12px; font-size: 0.82rem; white-space: nowrap; }
 
+.app-version { margin: 20px 2px 0; text-align: center; color: var(--text-muted); font-size: 0.75rem; }
+.app-version .btn { margin-left: 6px; }
+
 .backup-section {
   margin-top: 28px;
   padding-top: 20px;
