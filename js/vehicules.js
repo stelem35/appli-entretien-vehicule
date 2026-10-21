@@ -114,6 +114,9 @@ function openForm(id) {
     document.getElementById('vehicule-finition').value = v.finition || '';
     document.getElementById('vehicule-date-circulation').value = v.dateMiseEnCirculation || '';
     document.getElementById('vehicule-immatriculation').value = v.immatriculation || '';
+    document.getElementById('vehicule-prix-achat').value = v.prixAchat || '';
+    document.getElementById('vehicule-km-achat').value = v.kmAchat || '';
+    document.getElementById('vehicule-date-achat').value = v.dateAchat || '';
 
     if (v.photoBlobId) {
       db.getBlob(v.photoBlobId).then((blob) => {
@@ -178,12 +181,20 @@ async function handleSubmit(e) {
     finition: document.getElementById('vehicule-finition').value.trim(),
     dateMiseEnCirculation: document.getElementById('vehicule-date-circulation').value || '',
     immatriculation: document.getElementById('vehicule-immatriculation').value.trim(),
+    prixAchat: Number(document.getElementById('vehicule-prix-achat').value) || 0,
+    kmAchat: Number(document.getElementById('vehicule-km-achat').value) || 0,
+    dateAchat: document.getElementById('vehicule-date-achat').value || '',
     photoBlobId: null,
     dateCreation: new Date().toISOString(),
   };
 
   if (!vehicule.marque || !vehicule.modele) {
     errorEl.textContent = 'Marque et modèle sont obligatoires.';
+    errorEl.hidden = false;
+    return;
+  }
+  if (vehicule.prixAchat > 0 && (!vehicule.dateAchat || !vehicule.kmAchat)) {
+    errorEl.textContent = "Avec un prix d'achat, renseigne aussi la date d'achat et les km à l'achat.";
     errorEl.hidden = false;
     return;
   }

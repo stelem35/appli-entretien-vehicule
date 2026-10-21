@@ -111,14 +111,30 @@
     <select id="dashboard-vehicule" aria-label="Véhicule"></select>
     <select id="dashboard-year" aria-label="Année"></select>
   </div>
+  <div id="dashboard-period-fields" class="period-fields" hidden>
+    <div class="field">
+      <label for="dashboard-date-debut">Du</label>
+      <input type="date" id="dashboard-date-debut">
+    </div>
+    <div class="field">
+      <label for="dashboard-date-fin">Au</label>
+      <input type="date" id="dashboard-date-fin">
+    </div>
+  </div>
+  <p id="dashboard-period-error" class="form-error" hidden>La date de début est après la date de fin.</p>
+
+  <div class="switches">
+    <label class="switch"><input type="checkbox" id="dashboard-inclure-achat" checked><span>Inclure l'achat</span></label>
+    <label class="switch"><input type="checkbox" id="dashboard-inclure-precedents"><span>Inclure les achats d'un précédent propriétaire</span></label>
+  </div>
+  <p id="dashboard-achat-hint" class="chart-note" hidden>Renseigne « Mon prix d'achat » dans la fiche du véhicule pour l'inclure dans le Bilan.</p>
 
   <section class="kpi-grid">
     <div class="kpi"><span class="kpi-label">Coût total</span><span class="kpi-value" id="kpi-total">0 €</span></div>
     <div class="kpi"><span class="kpi-label">Entretiens</span><span class="kpi-value" id="kpi-count">0</span></div>
     <div class="kpi"><span class="kpi-label">Coût au km</span><span class="kpi-value" id="kpi-perkm">—</span></div>
-    <div class="kpi"><span class="kpi-label">Km suivis</span><span class="kpi-value" id="kpi-km">—</span></div>
+    <div class="kpi"><span class="kpi-label">Km pris en compte</span><span class="kpi-value" id="kpi-km">—</span><span class="kpi-sub" id="kpi-km-detail" hidden></span></div>
   </section>
-  <p class="chart-note">Coût au km = dépenses ÷ km entre le premier et le dernier entretien (estimation, nécessite au moins deux entretiens à des kilométrages différents).</p>
 
   <section class="chart-card">
     <h2>Dépenses par année</h2>
@@ -131,6 +147,8 @@
     <div id="chart-types" class="bars-h"></div>
     <p id="chart-types-empty" class="empty-state" hidden>Aucune donnée.</p>
   </section>
+
+  <p class="chart-note"><strong>Coût au km = dépenses de la période ÷ km parcourus sur la période, hors carburant et assurance.</strong> Km parcourus = km du dernier relevé − km du premier relevé de la période (au moins deux relevés avec un kilométrage). L'achat compte comme un relevé, à son kilométrage d'achat.</p>
 </main>
 
 <main id="view-export" class="view" hidden>
@@ -246,6 +264,22 @@
       <label for="vehicule-immatriculation">Immatriculation</label>
       <input type="text" id="vehicule-immatriculation" placeholder="ex : AA-123-AA">
     </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="vehicule-prix-achat">Mon prix d'achat (€)</label>
+        <input type="number" id="vehicule-prix-achat" min="0" step="0.01">
+      </div>
+      <div class="field">
+        <label for="vehicule-km-achat">Km à l'achat</label>
+        <input type="number" id="vehicule-km-achat" min="0" step="1">
+      </div>
+    </div>
+    <div class="field">
+      <label for="vehicule-date-achat">Date d'achat</label>
+      <input type="date" id="vehicule-date-achat">
+    </div>
+    <p class="field-hint">Sert au Bilan (coût au km). Date et km sont demandés dès qu'un prix d'achat est saisi.</p>
 
     <div class="field">
       <label>Photo du véhicule</label>

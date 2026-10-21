@@ -1,24 +1,42 @@
 import { getVehicules } from './vehicules.js';
 import { getEntretiens } from './entretiens.js';
 import { vehiculeLabel, formatKm } from './utils.js';
+import { options, buildLignes, filterPeriode, computeKpis } from './bilan.js';
 
 const vehiculeSelect = document.getElementById('dashboard-vehicule');
 const yearSelect = document.getElementById('dashboard-year');
+const periodFields = document.getElementById('dashboard-period-fields');
+const dateDebutInput = document.getElementById('dashboard-date-debut');
+const dateFinInput = document.getElementById('dashboard-date-fin');
+const periodError = document.getElementById('dashboard-period-error');
+const achatCheckbox = document.getElementById('dashboard-inclure-achat');
+const precedentsCheckbox = document.getElementById('dashboard-inclure-precedents');
+const achatHint = document.getElementById('dashboard-achat-hint');
 const kpiTotal = document.getElementById('kpi-total');
 const kpiCount = document.getElementById('kpi-count');
 const kpiPerKm = document.getElementById('kpi-perkm');
 const kpiKm = document.getElementById('kpi-km');
+const kpiKmDetail = document.getElementById('kpi-km-detail');
 const chartYears = document.getElementById('chart-years');
 const chartTypes = document.getElementById('chart-types');
 const yearsEmpty = document.getElementById('chart-years-empty');
 const typesEmpty = document.getElementById('chart-types-empty');
 
+const PERIODE_PERSO = 'custom';
+
 const euros = (n) => Math.round(n).toLocaleString('fr-FR') + ' €';
+
+// Format abrégé pour les barres : 850 €, 1,2 k€, 18,6 k€ (évite que les montants se chevauchent).
+const eurosCourt = (n) => {
+  if (Math.abs(n) < 1000) return Math.round(n) + ' €';
+  return (n / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' k€';
+};
 
 export function initDashboard() {
   refreshFilters();
-  vehiculeSelect.addEventListener('change', render);
-  yearSelect.addEventListener('change', render);
+  [vehiculeSelect, yearSelect, dateDebutInput, dateFinInput, achatCheckbox, precedentsCheckbox].forEach((el) =>
+    el.addEventListener('change', render)
+  );
   render();
 }
 
@@ -36,58 +54,73 @@ function refreshFilters() {
   if (vehicules.some((v) => v.id === prevVehicule)) vehiculeSelect.value = prevVehicule;
 
   const prevYear = yearSelect.value;
-  const years = [...new Set(getEntretiens().map((e) => e.dateEntretien.slice(0, 4)))].sort().reverse();
+  const dates = [
+    ...getEntretiens().map((e) => e.dateEntretien),
+    ...vehicules.filter((v) => Number(v.prixAchat) > 0).map((v) => v.dateAchat),
+  ];
+  const years = [...new Set(dates.filter(Boolean).map((d) => d.slice(0, 4)))].sort().reverse();
   yearSelect.innerHTML = '<option value="">Toutes années</option>' +
-    years.map((y) => `<option value="${y}">${y}</option>`).join('');
-  if (years.includes(prevYear)) yearSelect.value = prevYear;
+    years.map((y) => `<option value="${y}">${y}</option>`).join('') +
+    `<option value="${PERIODE_PERSO}">Du … au …</option>`;
+  if (years.includes(prevYear) || prevYear === PERIODE_PERSO) yearSelect.value = prevYear;
 }
 
 function render() {
-  const base = getEntretiens().filter((e) => !vehiculeSelect.value || e.vehiculeId === vehiculeSelect.value);
-  const year = yearSelect.value;
-  const filtered = year ? base.filter((e) => e.dateEntretien.startsWith(year)) : base;
+  options.inclureAchat = achatCheckbox.checked;
+  options.inclureAchatsPrecedents = precedentsCheckbox.checked;
+
+  const mode = yearSelect.value;
+  let debut = '';
+  let fin = '';
+  if (mode === PERIODE_PERSO) {
+    debut = dateDebutInput.value;
+    fin = dateFinInput.value;
+  } else if (mode) {
+    debut = `${mode}-01-01`;
+    fin = `${mode}-12-31`;
+  }
+  periodFields.hidden = mode !== PERIODE_PERSO;
+  periodError.hidden = !(debut && fin && debut > fin);
+
+  const vehiculeId = vehiculeSelect.value;
+  const base = buildLignes(getEntretiens(), getVehicules(), { vehiculeId, ...options });
+  const filtered = filterPeriode(base, debut, fin);
+
+  const concernes = getVehicules().filter((v) => !vehiculeId || v.id === vehiculeId);
+  achatHint.hidden = !options.inclureAchat || concernes.some((v) => Number(v.prixAchat) > 0);
 
   renderKpis(filtered);
-  renderYears(base, year);
+  // Année choisie : on garde toutes les années (les autres sont atténuées) ; période libre : seulement la période.
+  renderYears(mode === PERIODE_PERSO ? filtered : base, mode === PERIODE_PERSO ? '' : mode);
   renderTypes(filtered);
 }
 
-function renderKpis(list) {
-  const total = list.reduce((s, e) => s + (Number(e.prix) || 0), 0);
-  kpiTotal.textContent = euros(total);
-  kpiCount.textContent = String(list.length);
+function renderKpis(lignes) {
+  const k = computeKpis(lignes);
+  kpiTotal.textContent = euros(k.total);
+  kpiCount.textContent = String(k.count);
 
-  // Coût au km : par véhicule, dépenses / km entre le premier et le dernier entretien.
-  let costSum = 0;
-  let kmSum = 0;
-  const byVehicule = new Map();
-  list.forEach((e) => {
-    if (!byVehicule.has(e.vehiculeId)) byVehicule.set(e.vehiculeId, []);
-    byVehicule.get(e.vehiculeId).push(e);
-  });
-  byVehicule.forEach((entries) => {
-    const kms = entries.map((e) => Number(e.kilometrage) || 0);
-    const span = Math.max(...kms) - Math.min(...kms);
-    if (span > 0) {
-      kmSum += span;
-      costSum += entries.reduce((s, e) => s + (Number(e.prix) || 0), 0);
-    }
-  });
-
-  if (kmSum > 0) {
-    kpiPerKm.textContent = (costSum / kmSum).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €/km';
-    kpiKm.textContent = formatKm(kmSum);
+  if (k.perKm !== null) {
+    kpiPerKm.textContent = k.perKm.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €/km';
+    kpiKm.textContent = formatKm(k.km);
   } else {
     kpiPerKm.textContent = '—';
     kpiKm.textContent = '—';
   }
+
+  const detail = k.perKm !== null && k.premierKm !== null
+    ? `de ${k.premierKm.toLocaleString('fr-FR')} à ${k.dernierKm.toLocaleString('fr-FR')} km`
+    : '';
+  kpiKmDetail.textContent = detail;
+  kpiKmDetail.hidden = !detail;
 }
 
-function renderYears(base, selectedYear) {
+function renderYears(lignes, selectedYear) {
   const totals = new Map();
-  base.forEach((e) => {
-    const y = e.dateEntretien.slice(0, 4);
-    totals.set(y, (totals.get(y) || 0) + (Number(e.prix) || 0));
+  lignes.forEach((l) => {
+    if (!l.date) return;
+    const y = l.date.slice(0, 4);
+    totals.set(y, (totals.get(y) || 0) + l.prix);
   });
   const entries = [...totals.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 
@@ -103,7 +136,7 @@ function renderYears(base, selectedYear) {
 
     const label = document.createElement('span');
     label.className = 'bar-value';
-    label.textContent = euros(value);
+    label.textContent = eurosCourt(value);
 
     const bar = document.createElement('div');
     bar.className = 'bar-v';
@@ -122,9 +155,9 @@ function renderYears(base, selectedYear) {
   });
 }
 
-function renderTypes(list) {
+function renderTypes(lignes) {
   const totals = new Map();
-  list.forEach((e) => totals.set(e.typeEntretien, (totals.get(e.typeEntretien) || 0) + (Number(e.prix) || 0)));
+  lignes.forEach((l) => totals.set(l.type, (totals.get(l.type) || 0) + l.prix));
   const entries = [...totals.entries()].sort((a, b) => b[1] - a[1]);
 
   chartTypes.innerHTML = '';

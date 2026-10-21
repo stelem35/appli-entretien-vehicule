@@ -2,6 +2,7 @@ import * as db from './db.js';
 import { getVehicules, getVehiculeById } from './vehicules.js';
 import { getEntretiens } from './entretiens.js';
 import { vehiculeLabel, formatDate, formatCurrency, formatKm, debounce, showToast } from './utils.js';
+import { options as bilanOptions, buildLignes, filterPeriode, computeKpis } from './bilan.js';
 
 const TYPES = [
   'Vidange', 'Révision', 'Freins', 'Pneus', 'Distribution/courroie',
@@ -147,9 +148,36 @@ async function generatePdf() {
 
   const total = list.reduce((sum, e) => sum + (Number(e.prix) || 0), 0);
 
+  // Synthèse identique au Bilan (mêmes calculs, mêmes interrupteurs) ; sans filtre type/texte,
+  // car un coût au km n'a de sens que sur l'ensemble des dépenses de la période.
+  let startY = 26;
+  if (!typeSelect.value && !texteInput.value.trim()) {
+    const lignes = filterPeriode(
+      buildLignes(getEntretiens(), getVehicules(), { vehiculeId: vehiculeSelect.value, ...bilanOptions }),
+      dateDebutInput.value,
+      dateFinInput.value
+    );
+    const k = computeKpis(lignes);
+    const euros = (n) => Math.round(n).toLocaleString('fr-FR') + ' €';
+    const periode = dateDebutInput.value || dateFinInput.value
+      ? `Période : ${dateDebutInput.value ? 'du ' + formatDate(dateDebutInput.value) : ''}${dateFinInput.value ? ' au ' + formatDate(dateFinInput.value) : ''}`
+      : 'Période : toutes années';
+    const synthese = [
+      `${periode} · Dépenses (hors carburant et assurance) : ${euros(k.total)}${bilanOptions.inclureAchat ? ' (achat inclus)' : ''}`,
+      k.perKm !== null
+        ? `Coût au km : ${k.perKm.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €/km sur ${formatKm(k.km)} pris en compte`
+        : 'Coût au km : non calculable (au moins deux relevés avec kilométrage nécessaires)',
+    ];
+    startY = 26 + synthese.length * 5 + 3;
+    doc.setFontSize(9);
+    doc.setTextColor(60);
+    synthese.forEach((line, i) => doc.text(line, 14, 29 + i * 5));
+  }
+
   doc.autoTable({
     head,
     body,
+    startY,
     margin: { top: 26 },
     styles: { fontSize: 9 },
     headStyles: { fillColor: [15, 23, 42] },
