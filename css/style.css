@@ -256,6 +256,16 @@ input, select {
 }
 input:focus, select:focus { outline: 2px solid var(--primary); }
 
+/* iPhone : un champ date garde sa largeur intrinsèque et déborde de l'écran sans ces règles */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-height: 2.75rem;
+  text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+
 .photo-picker { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .btn-remove-photo {
   background: none;
@@ -421,6 +431,7 @@ input:focus, select:focus { outline: 2px solid var(--primary); }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-bottom: 12px;
 }
 .kpi {
   background: var(--surface);
@@ -437,7 +448,8 @@ input:focus, select:focus { outline: 2px solid var(--primary); }
 .kpi-sub { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chart-note { color: var(--text-muted); font-size: 0.75rem; margin: 8px 2px 14px; }
 
-.period-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+/* Empilés (comme le filtre par date des entretiens) : deux champs date côte à côte se chevauchent sur iPhone */
+.period-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 .period-fields[hidden] { display: none; }
 
 .switches { display: flex; flex-direction: column; gap: 8px; margin: 4px 2px 12px; }
