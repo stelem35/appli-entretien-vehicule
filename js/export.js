@@ -103,6 +103,9 @@ async function render() {
   totalEl.textContent = formatCurrency(total);
 }
 
+// La police du PDF n'affiche pas l'espace fine insécable des milliers (« 297 736 » devenait « 297/736 »).
+const pdfText = (str) => str.replace(/[\u202f\u00a0]/g, ' ');
+
 async function generatePdf() {
   const list = getFiltered();
   if (list.length === 0) {
@@ -136,10 +139,10 @@ async function generatePdf() {
     const v = getVehiculeById(e.vehiculeId);
     const row = [
       formatDate(e.dateEntretien),
-      formatKm(e.kilometrage),
+      pdfText(formatKm(e.kilometrage)),
       e.typeEntretien,
       e.resume || '',
-      formatCurrency(e.prix),
+      pdfText(formatCurrency(e.prix)),
       e.nomGarage || '',
     ];
     if (multiVehicule) row.unshift(vehiculeLabel(v));
@@ -158,14 +161,14 @@ async function generatePdf() {
       dateFinInput.value
     );
     const k = computeKpis(lignes);
-    const euros = (n) => Math.round(n).toLocaleString('fr-FR') + ' €';
+    const euros = (n) => pdfText(Math.round(n).toLocaleString('fr-FR') + ' €');
     const periode = dateDebutInput.value || dateFinInput.value
       ? `Période : ${dateDebutInput.value ? 'du ' + formatDate(dateDebutInput.value) : ''}${dateFinInput.value ? ' au ' + formatDate(dateFinInput.value) : ''}`
       : 'Période : toutes années';
     const synthese = [
       `${periode} · Dépenses (hors carburant et assurance) : ${euros(k.total)}${bilanOptions.inclureAchat ? ' (achat inclus)' : ''}`,
       k.perKm !== null
-        ? `Coût au km : ${k.perKm.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €/km sur ${formatKm(k.km)} pris en compte`
+        ? `Coût au km : ${pdfText(k.perKm.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))} €/km sur ${pdfText(formatKm(k.km))} pris en compte`
         : 'Coût au km : non calculable (au moins deux relevés avec kilométrage nécessaires)',
     ];
     startY = 26 + synthese.length * 5 + 3;
@@ -186,8 +189,8 @@ async function generatePdf() {
       : { 1: { cellWidth: 'wrap' }, 4: { cellWidth: 'wrap' } },
     headStyles: { fillColor: [15, 23, 42] },
     foot: [multiVehicule
-      ? ['', '', '', '', 'Total', formatCurrency(total), '']
-      : ['', '', '', 'Total', formatCurrency(total), '']],
+      ? ['', '', '', '', 'Total', pdfText(formatCurrency(total)), '']
+      : ['', '', '', 'Total', pdfText(formatCurrency(total)), '']],
     footStyles: { fillColor: [226, 232, 240], textColor: 20 },
     didDrawPage: drawHeader,
   });
