@@ -1,5 +1,5 @@
 import * as db from './db.js';
-import { generateId, resizeImage, blobToObjectURL, showToast, vehiculeLabel, formatDate } from './utils.js';
+import { generateId, resizeImage, blobToObjectURL, showToast, vehiculeLabel, formatDate, formatKm, todayISO } from './utils.js';
 
 let vehicules = [];
 let onChangeCallback = null;
@@ -77,6 +77,7 @@ async function render() {
         <div class="card-subtitle">${TYPE_LABELS[v.type] || v.type}${v.immatriculation ? ' · ' + escapeHtml(v.immatriculation) : ''}</div>
         <div class="card-meta">
           ${v.dateMiseEnCirculation ? `<span>Mise en circulation : ${formatDate(v.dateMiseEnCirculation)}</span>` : ''}
+          ${v.kmActuel ? `<span>Km actuel : ${formatKm(v.kmActuel)}${v.dateKmActuel ? ' (au ' + formatDate(v.dateKmActuel) + ')' : ''}</span>` : ''}
         </div>
       </div>
       <div class="card-actions">
@@ -114,6 +115,7 @@ function openForm(id) {
     document.getElementById('vehicule-finition').value = v.finition || '';
     document.getElementById('vehicule-date-circulation').value = v.dateMiseEnCirculation || '';
     document.getElementById('vehicule-immatriculation').value = v.immatriculation || '';
+    document.getElementById('vehicule-km-actuel').value = v.kmActuel || '';
     document.getElementById('vehicule-prix-achat').value = v.prixAchat || '';
     document.getElementById('vehicule-km-achat').value = v.kmAchat || '';
     document.getElementById('vehicule-date-achat').value = v.dateAchat || '';
@@ -181,6 +183,8 @@ async function handleSubmit(e) {
     finition: document.getElementById('vehicule-finition').value.trim(),
     dateMiseEnCirculation: document.getElementById('vehicule-date-circulation').value || '',
     immatriculation: document.getElementById('vehicule-immatriculation').value.trim(),
+    kmActuel: Number(document.getElementById('vehicule-km-actuel').value) || 0,
+    dateKmActuel: '',
     prixAchat: Number(document.getElementById('vehicule-prix-achat').value) || 0,
     kmAchat: Number(document.getElementById('vehicule-km-achat').value) || 0,
     dateAchat: document.getElementById('vehicule-date-achat').value || '',
@@ -202,6 +206,12 @@ async function handleSubmit(e) {
   const existing = isNew ? null : getVehiculeById(id);
   vehicule.dateCreation = existing ? existing.dateCreation : vehicule.dateCreation;
   vehicule.photoBlobId = existing ? existing.photoBlobId : null;
+  // Date du relevé : aujourd'hui si le km actuel vient d'être saisi ou modifié, sinon on garde l'ancienne date.
+  if (vehicule.kmActuel > 0) {
+    vehicule.dateKmActuel = existing && existing.kmActuel === vehicule.kmActuel && existing.dateKmActuel
+      ? existing.dateKmActuel
+      : todayISO();
+  }
 
   if (pendingPhotoBlob) {
     const blobId = vehicule.photoBlobId || generateId();

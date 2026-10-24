@@ -1,5 +1,5 @@
 // Numéro de version affiché dans l'app. À augmenter en même temps que CACHE_NAME dans sw.js (même numéro).
-export const APP_VERSION = 'v20';
+export const APP_VERSION = 'v21';
 
 const versionEl = document.getElementById('app-version');
 const updateBtn = document.getElementById('app-update-btn');

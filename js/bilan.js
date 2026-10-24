@@ -1,4 +1,5 @@
 // Calculs du Bilan (sans accès au DOM : partagés par l'écran Bilan et l'export PDF).
+import { todayISO } from './utils.js';
 
 // Réglages des interrupteurs du Bilan, lus aussi par l'export PDF pour garder les mêmes calculs.
 export const options = {
@@ -35,6 +36,23 @@ export function buildLignes(entretiens, vehicules, { vehiculeId = '', inclureAch
     });
   });
 
+  // Kilométrage actuel saisi dans la fiche véhicule : dernier relevé (sans dépense), daté du jour de sa saisie.
+  vehicules.forEach((v) => {
+    if (vehiculeId && v.id !== vehiculeId) return;
+    const km = Number(v.kmActuel) || 0;
+    if (km <= 0) return;
+    lignes.push({
+      vehiculeId: v.id,
+      date: v.dateKmActuel || todayISO(),
+      type: 'Kilométrage actuel',
+      prix: 0,
+      km,
+      achat: false,
+      precedent: false,
+      releve: true,
+    });
+  });
+
   if (inclureAchat) {
     vehicules.forEach((v) => {
       if (vehiculeId && v.id !== vehiculeId) return;
@@ -66,7 +84,7 @@ export function filterPeriode(lignes, debut, fin) {
 // les relevés sans kilométrage (0 ou vide) sont ignorés pour ne pas fausser le point de départ.
 export function computeKpis(lignes) {
   const total = lignes.reduce((s, l) => s + l.prix, 0);
-  const count = lignes.filter((l) => !l.achat).length;
+  const count = lignes.filter((l) => !l.achat && !l.releve).length;
 
   const parVehicule = new Map();
   lignes.forEach((l) => {
@@ -79,8 +97,10 @@ export function computeKpis(lignes) {
   let premierKm = null;
   let dernierKm = null;
   parVehicule.forEach((list) => {
+    // Un km actuel inférieur à un relevé déjà enregistré est une erreur de saisie : on l'ignore.
+    const kmMax = Math.max(0, ...list.filter((l) => !l.releve).map((l) => l.km));
     const releves = list
-      .filter((l) => l.km > 0)
+      .filter((l) => l.km > 0 && !(l.releve && l.km <= kmMax))
       .sort((a, b) => a.date.localeCompare(b.date) || a.km - b.km);
     if (releves.length < 2) return;
     const debut = releves[0].km;

@@ -130,7 +130,7 @@ function renderKpis(lignes) {
 function renderYears(lignes, selectedYear) {
   const totals = new Map();
   lignes.forEach((l) => {
-    if (!l.date) return;
+    if (!l.date || l.releve) return;
     const y = l.date.slice(0, 4);
     totals.set(y, (totals.get(y) || 0) + l.prix);
   });
@@ -169,7 +169,7 @@ function renderYears(lignes, selectedYear) {
 
 function renderTypes(lignes) {
   const totals = new Map();
-  lignes.forEach((l) => totals.set(l.type, (totals.get(l.type) || 0) + l.prix));
+  lignes.filter((l) => !l.releve).forEach((l) => totals.set(l.type, (totals.get(l.type) || 0) + l.prix));
   const entries = [...totals.entries()].sort((a, b) => b[1] - a[1]);
 
   chartTypes.innerHTML = '';
